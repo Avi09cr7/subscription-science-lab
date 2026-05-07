@@ -1,0 +1,13 @@
+feature,coefficient
+tenure_months,-0.4864835236108294
+plan_monthly,0.3152656154241953
+support_tickets_90d,0.3032910300611489
+discount_rate,0.2566808129679358
+email_engagement,-0.21848706758351474
+avg_days_between_orders,0.19632553539931186
+brand_Dyson,-0.15911373638651694
+acquisition_channel_display,0.1494784443140416
+monthly_revenue,0.14664897012880926
+late_shipments_90d,0.12106595179308495
+brand_Leading Edge Health,-0.11492733302898953
+acquisition_channel_paid_search,0.07286545493139517

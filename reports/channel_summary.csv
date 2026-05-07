@@ -1,0 +1,21 @@
+brand,acquisition_channel,spend,conversions,attributed_revenue,roi,cost_per_conversion
+Levi's,paid_search,30784,403,86366.76,1.806,76.39
+Levi's,affiliate,14690,152,18858.86,0.284,96.64
+Levi's,display,35801,669,69438.05,0.94,53.51
+Levi's,email,29869,595,95842.28,2.209,50.2
+Levi's,organic,13579,102,12907.98,-0.049,133.13
+Dyson,paid_search,37709,347,123315.73,2.27,108.67
+Dyson,affiliate,10468,80,30473.72,1.911,130.85
+Dyson,display,34485,332,171538.49,3.974,103.87
+Dyson,email,13861,180,42723.62,2.082,77.01
+Dyson,organic,37791,267,112473.73,1.976,141.54
+Beiersdorf,paid_search,16519,119,14745.38,-0.107,138.82
+Beiersdorf,affiliate,23770,332,46723.75,0.966,71.6
+Beiersdorf,display,23805,413,48384.89,1.033,57.64
+Beiersdorf,email,12831,107,14095.37,0.099,119.92
+Beiersdorf,organic,8539,77,11016.39,0.29,110.9
+Leading Edge Health,paid_search,22078,222,44531.74,1.017,99.45
+Leading Edge Health,affiliate,8485,122,16746.74,0.974,69.55
+Leading Edge Health,display,16232,125,13797.79,-0.15,129.86
+Leading Edge Health,email,14268,162,26728.85,0.873,88.07
+Leading Edge Health,organic,21532,181,39223.22,0.822,118.96

@@ -1,0 +1,197 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+from model import classification_metrics, predict_proba, train_logistic_regression
+
+
+ROOT = Path(__file__).resolve().parents[1]
+RAW_DIR = ROOT / "data" / "raw"
+PROCESSED_DIR = ROOT / "data" / "processed"
+REPORTS_DIR = ROOT / "reports"
+
+
+CUSTOMER_COLUMNS = {
+    "customer_id",
+    "brand",
+    "region",
+    "acquisition_channel",
+    "plan",
+    "tenure_months",
+    "active_subscriptions",
+    "monthly_revenue",
+    "discount_rate",
+    "support_tickets_90d",
+    "late_shipments_90d",
+    "email_engagement",
+    "avg_days_between_orders",
+    "churned",
+}
+
+
+def validate_customers(customers: pd.DataFrame) -> list[str]:
+    checks = []
+    missing_columns = CUSTOMER_COLUMNS - set(customers.columns)
+    if missing_columns:
+        raise ValueError(f"Missing expected columns: {sorted(missing_columns)}")
+    if customers[sorted(CUSTOMER_COLUMNS)].isna().sum().sum() != 0:
+        raise ValueError("Customer dataset contains missing values.")
+    if customers["customer_id"].duplicated().any():
+        raise ValueError("Customer IDs must be unique.")
+    if (customers["monthly_revenue"] <= 0).any():
+        raise ValueError("Monthly revenue must be positive.")
+    if not customers["discount_rate"].between(0, 1).all():
+        raise ValueError("Discount rate must be between 0 and 1.")
+    if not set(customers["churned"].unique()).issubset({0, 1}):
+        raise ValueError("Churn label must be binary.")
+    checks.extend(
+        [
+            "schema_check_passed",
+            "missing_value_check_passed",
+            "unique_customer_check_passed",
+            "business_rule_check_passed",
+        ]
+    )
+    return checks
+
+
+def train_churn_model(customers: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, float], pd.DataFrame]:
+    feature_frame = pd.get_dummies(
+        customers[
+            [
+                "brand",
+                "region",
+                "acquisition_channel",
+                "plan",
+                "tenure_months",
+                "active_subscriptions",
+                "monthly_revenue",
+                "discount_rate",
+                "support_tickets_90d",
+                "late_shipments_90d",
+                "email_engagement",
+                "avg_days_between_orders",
+            ]
+        ],
+        drop_first=True,
+    )
+    labels = customers["churned"].to_numpy()
+    rng = np.random.default_rng(42)
+    indices = rng.permutation(len(customers))
+    split = int(len(customers) * 0.78)
+    train_idx, test_idx = indices[:split], indices[split:]
+
+    model = train_logistic_regression(
+        feature_frame.iloc[train_idx].to_numpy(dtype=float),
+        labels[train_idx],
+        list(feature_frame.columns),
+    )
+    test_probabilities = predict_proba(model, feature_frame.iloc[test_idx].to_numpy(dtype=float))
+    metrics = classification_metrics(labels[test_idx], test_probabilities)
+
+    all_probabilities = predict_proba(model, feature_frame.to_numpy(dtype=float))
+    scored = customers.copy()
+    scored["churn_risk_score"] = np.round(all_probabilities, 4)
+    scored["risk_segment"] = pd.cut(
+        scored["churn_risk_score"],
+        bins=[0, 0.25, 0.45, 0.65, 1.0],
+        labels=["low", "watch", "high", "critical"],
+        include_lowest=True,
+    )
+
+    coefficients = (
+        pd.DataFrame({"feature": model.feature_names, "coefficient": model.weights})
+        .assign(abs_coefficient=lambda frame: frame["coefficient"].abs())
+        .sort_values("abs_coefficient", ascending=False)
+        .drop(columns="abs_coefficient")
+    )
+    return scored, metrics, coefficients
+
+
+def build_summaries(customers: pd.DataFrame, campaigns: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    brand_summary = (
+        customers.groupby("brand")
+        .agg(
+            customers=("customer_id", "count"),
+            monthly_revenue=("monthly_revenue", "sum"),
+            churn_rate=("churned", "mean"),
+            avg_risk_score=("churn_risk_score", "mean"),
+            support_tickets_90d=("support_tickets_90d", "sum"),
+        )
+        .reset_index()
+        .sort_values("avg_risk_score", ascending=False)
+    )
+    brand_summary["monthly_revenue"] = brand_summary["monthly_revenue"].round(2)
+    brand_summary["churn_rate"] = brand_summary["churn_rate"].round(4)
+    brand_summary["avg_risk_score"] = brand_summary["avg_risk_score"].round(4)
+
+    channel_summary = campaigns.copy()
+    channel_summary["roi"] = (channel_summary["attributed_revenue"] - channel_summary["spend"]) / channel_summary["spend"]
+    channel_summary["cost_per_conversion"] = channel_summary["spend"] / channel_summary["conversions"].replace(0, np.nan)
+    channel_summary = channel_summary.round({"roi": 3, "cost_per_conversion": 2})
+    return brand_summary, channel_summary
+
+
+def forecast_revenue(monthly: pd.DataFrame, periods: int = 6) -> pd.DataFrame:
+    monthly = monthly.copy()
+    monthly["month"] = pd.to_datetime(monthly["month"])
+    forecast_rows = []
+    for brand, group in monthly.sort_values("month").groupby("brand"):
+        values = group["subscription_revenue"].to_numpy()
+        x = np.arange(len(values))
+        slope, intercept = np.polyfit(x, values, 1)
+        residual_scale = np.std(values - (slope * x + intercept))
+        for step in range(1, periods + 1):
+            month = group["month"].max() + pd.DateOffset(months=step)
+            point = slope * (len(values) + step - 1) + intercept
+            forecast_rows.append(
+                {
+                    "month": month.date().isoformat(),
+                    "brand": brand,
+                    "forecast_revenue": round(float(point), 2),
+                    "lower_bound": round(float(point - 1.15 * residual_scale), 2),
+                    "upper_bound": round(float(point + 1.15 * residual_scale), 2),
+                }
+            )
+    return pd.DataFrame(forecast_rows)
+
+
+def main() -> None:
+    PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    customers = pd.read_csv(RAW_DIR / "customers.csv")
+    monthly = pd.read_csv(RAW_DIR / "monthly_revenue.csv")
+    campaigns = pd.read_csv(RAW_DIR / "campaigns.csv")
+
+    validation_checks = validate_customers(customers)
+    scored_customers, metrics, coefficients = train_churn_model(customers)
+    brand_summary, channel_summary = build_summaries(scored_customers, campaigns)
+    revenue_forecast = forecast_revenue(monthly)
+
+    scored_customers.to_csv(PROCESSED_DIR / "customers_scored.csv", index=False)
+    scored_customers.sort_values("churn_risk_score", ascending=False).head(100).to_csv(
+        REPORTS_DIR / "customer_risk_scores.csv", index=False
+    )
+    brand_summary.to_csv(REPORTS_DIR / "brand_summary.csv", index=False)
+    channel_summary.to_csv(REPORTS_DIR / "channel_summary.csv", index=False)
+    revenue_forecast.to_csv(REPORTS_DIR / "revenue_forecast.csv", index=False)
+    coefficients.head(12).to_csv(REPORTS_DIR / "top_model_drivers.csv", index=False)
+
+    metrics_payload = {
+        "validation_checks": validation_checks,
+        "model_metrics": metrics,
+        "rows_processed": int(len(customers)),
+        "overall_churn_rate": round(float(customers["churned"].mean()), 4),
+        "total_monthly_revenue": round(float(customers["monthly_revenue"].sum()), 2),
+    }
+    (REPORTS_DIR / "model_metrics.json").write_text(json.dumps(metrics_payload, indent=2), encoding="utf-8")
+    print("Pipeline complete. Reports written to reports/.")
+
+
+if __name__ == "__main__":
+    main()

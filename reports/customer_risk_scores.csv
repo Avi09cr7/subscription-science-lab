@@ -1,0 +1,101 @@
+customer_id,brand,region,acquisition_channel,plan,tenure_months,active_subscriptions,monthly_revenue,discount_rate,support_tickets_90d,late_shipments_90d,email_engagement,avg_days_between_orders,churned,churn_risk_score,risk_segment
+CUST-01293,Beiersdorf,Malaysia,display,monthly,9,1,42.51,0.55,2,1,0.02,33.7,1,0.7631,critical
+CUST-01877,Dyson,Thailand,affiliate,monthly,9,1,156.67,0.328,3,5,0.425,27.7,1,0.6997,critical
+CUST-01334,Dyson,Malaysia,paid_search,monthly,2,1,89.64,0.127,6,1,0.664,41.3,1,0.6966,critical
+CUST-01959,Dyson,Indonesia,organic,monthly,11,2,119.95,0.356,5,1,0.505,42.6,1,0.693,critical
+CUST-00843,Dyson,Singapore,display,monthly,10,1,109.9,0.11,5,2,0.465,32.9,0,0.6859,critical
+CUST-01948,Leading Edge Health,Malaysia,affiliate,monthly,22,3,94.09,0.502,5,1,0.231,39.8,1,0.6695,critical
+CUST-00407,Levi's,Indonesia,display,quarterly,2,2,69.49,0.333,2,2,0.386,60.3,1,0.6543,critical
+CUST-00776,Beiersdorf,Thailand,affiliate,monthly,2,3,37.09,0.415,3,0,0.127,25.4,1,0.653,critical
+CUST-02044,Beiersdorf,Indonesia,email,monthly,1,2,36.98,0.27,3,3,0.564,32.2,1,0.649,high
+CUST-00042,Leading Edge Health,Malaysia,display,quarterly,6,1,74.4,0.409,3,1,0.357,62.2,1,0.6401,high
+CUST-00250,Beiersdorf,Indonesia,display,quarterly,7,3,49.55,0.319,4,0,0.355,54.0,1,0.6326,high
+CUST-02239,Dyson,Malaysia,display,quarterly,3,2,138.35,0.439,2,1,0.165,40.0,0,0.63,high
+CUST-02514,Levi's,Indonesia,email,monthly,2,2,65.01,0.55,2,1,0.628,34.3,1,0.6284,high
+CUST-01015,Levi's,Indonesia,affiliate,annual,3,3,61.38,0.55,3,0,0.651,90.6,1,0.6089,high
+CUST-00193,Levi's,Singapore,display,monthly,4,3,61.71,0.153,2,3,0.474,36.7,1,0.6033,high
+CUST-02175,Levi's,Thailand,paid_search,quarterly,9,1,49.99,0.48,3,1,0.323,47.0,0,0.6,high
+CUST-00695,Dyson,Malaysia,display,monthly,7,2,124.89,0.327,2,1,0.335,39.1,1,0.5887,high
+CUST-01246,Dyson,Singapore,email,monthly,12,1,112.61,0.319,3,2,0.327,31.2,0,0.5729,high
+CUST-00239,Dyson,Indonesia,email,monthly,4,2,134.84,0.456,2,0,0.248,20.4,0,0.5719,high
+CUST-01235,Levi's,Malaysia,display,monthly,3,2,67.81,0.13,3,0,0.465,39.7,0,0.5707,high
+CUST-01650,Beiersdorf,Indonesia,display,monthly,9,3,24.17,0.135,3,0,0.089,35.8,1,0.5705,high
+CUST-01736,Levi's,Thailand,display,monthly,9,2,63.64,0.501,1,1,0.35,28.1,1,0.5692,high
+CUST-00247,Dyson,Philippines,email,annual,3,2,192.46,0.285,3,2,0.653,82.2,1,0.5673,high
+CUST-02024,Beiersdorf,Singapore,display,monthly,5,2,42.05,0.319,1,1,0.278,31.8,1,0.5567,high
+CUST-00953,Dyson,Indonesia,organic,monthly,1,2,109.87,0.513,1,2,0.439,15.4,0,0.5535,high
+CUST-02420,Beiersdorf,Philippines,affiliate,monthly,8,1,37.34,0.359,3,1,0.5,42.4,1,0.5527,high
+CUST-00806,Levi's,Indonesia,display,monthly,2,1,50.91,0.322,0,2,0.306,27.5,0,0.5525,high
+CUST-00137,Dyson,Thailand,organic,annual,4,3,241.98,0.41,1,1,0.349,79.8,0,0.552,high
+CUST-00082,Beiersdorf,Singapore,email,monthly,2,1,37.42,0.203,3,0,0.404,34.9,0,0.5511,high
+CUST-02576,Levi's,Malaysia,paid_search,monthly,2,3,50.03,0.322,2,1,0.493,37.7,0,0.5452,high
+CUST-01475,Levi's,Thailand,organic,monthly,12,3,72.97,0.272,3,0,0.128,34.8,0,0.5439,high
+CUST-01680,Dyson,Malaysia,organic,monthly,4,2,111.78,0.502,2,1,0.618,38.6,1,0.5429,high
+CUST-01840,Dyson,Indonesia,paid_search,monthly,12,3,144.12,0.55,2,0,0.497,44.8,1,0.5411,high
+CUST-01499,Beiersdorf,Indonesia,paid_search,monthly,8,2,32.82,0.112,4,0,0.323,29.0,0,0.5356,high
+CUST-01430,Dyson,Indonesia,paid_search,monthly,18,2,114.77,0.491,2,2,0.239,23.7,0,0.5345,high
+CUST-01347,Dyson,Indonesia,display,monthly,11,2,121.47,0.222,3,0,0.343,36.6,0,0.5338,high
+CUST-01552,Beiersdorf,Malaysia,display,annual,1,3,49.17,0.15,2,2,0.375,69.6,1,0.5235,high
+CUST-00600,Dyson,Indonesia,paid_search,monthly,1,1,144.01,0.501,0,1,0.512,36.0,0,0.5228,high
+CUST-02123,Beiersdorf,Singapore,paid_search,quarterly,10,1,27.34,0.55,1,2,0.345,53.1,1,0.516,high
+CUST-01302,Beiersdorf,Thailand,organic,monthly,2,2,45.64,0.146,2,2,0.323,28.6,1,0.5126,high
+CUST-01708,Dyson,Singapore,paid_search,annual,8,3,132.07,0.515,0,1,0.135,92.8,1,0.5119,high
+CUST-01370,Dyson,Malaysia,organic,monthly,9,1,121.34,0.356,4,0,0.814,44.8,1,0.5118,high
+CUST-00215,Beiersdorf,Indonesia,display,monthly,2,2,36.22,0.418,1,1,0.613,22.4,0,0.5105,high
+CUST-01583,Dyson,Indonesia,email,quarterly,4,2,121.67,0.426,3,1,0.637,54.3,0,0.5102,high
+CUST-00353,Levi's,Malaysia,display,monthly,9,2,61.28,0.437,2,0,0.611,32.7,1,0.5101,high
+CUST-01893,Leading Edge Health,Malaysia,display,monthly,4,2,61.18,0.235,2,1,0.338,27.0,1,0.5094,high
+CUST-02441,Beiersdorf,Malaysia,display,monthly,7,1,37.55,0.401,1,0,0.292,26.2,0,0.5059,high
+CUST-01415,Dyson,Philippines,email,monthly,9,1,91.84,0.44,3,1,0.517,23.8,0,0.5002,high
+CUST-00332,Levi's,Indonesia,display,monthly,2,1,40.25,0.306,0,1,0.283,27.7,0,0.4988,high
+CUST-01280,Levi's,Philippines,organic,monthly,1,1,61.18,0.252,2,0,0.483,41.8,0,0.4983,high
+CUST-01382,Levi's,Thailand,organic,monthly,4,1,52.34,0.051,3,0,0.215,32.1,1,0.4973,high
+CUST-01070,Levi's,Malaysia,paid_search,monthly,1,2,43.37,0.55,1,0,0.574,23.3,0,0.497,high
+CUST-01146,Leading Edge Health,Malaysia,paid_search,monthly,3,2,50.35,0.55,1,0,0.453,40.1,0,0.4969,high
+CUST-02138,Levi's,Indonesia,organic,quarterly,11,1,73.0,0.469,1,0,0.055,57.8,0,0.4966,high
+CUST-02251,Leading Edge Health,Indonesia,affiliate,monthly,17,1,54.21,0.281,4,0,0.339,48.6,1,0.4921,high
+CUST-00072,Beiersdorf,Indonesia,organic,monthly,1,1,40.44,0.437,1,1,0.628,29.4,0,0.4914,high
+CUST-01922,Levi's,Indonesia,display,quarterly,15,1,60.62,0.55,2,2,0.65,38.9,0,0.4914,high
+CUST-01836,Levi's,Thailand,organic,monthly,5,1,72.06,0.383,1,1,0.443,33.7,0,0.4908,high
+CUST-00464,Dyson,Thailand,paid_search,monthly,7,2,102.87,0.409,2,0,0.371,33.5,1,0.4875,high
+CUST-01781,Levi's,Philippines,organic,annual,8,2,79.72,0.465,2,1,0.594,82.5,0,0.4872,high
+CUST-01369,Dyson,Philippines,affiliate,monthly,1,3,143.15,0.258,3,0,0.626,44.5,0,0.4869,high
+CUST-01180,Beiersdorf,Philippines,display,monthly,7,2,37.5,0.373,0,0,0.106,44.8,1,0.4865,high
+CUST-00565,Dyson,Singapore,email,monthly,4,2,117.93,0.169,2,1,0.14,21.4,0,0.4851,high
+CUST-01149,Levi's,Singapore,paid_search,monthly,15,1,57.51,0.183,4,0,0.533,36.6,1,0.4846,high
+CUST-02477,Leading Edge Health,Philippines,display,quarterly,9,3,63.55,0.201,5,0,0.6,57.0,1,0.4838,high
+CUST-00759,Leading Edge Health,Indonesia,paid_search,quarterly,3,1,91.13,0.099,1,4,0.186,50.7,0,0.4837,high
+CUST-00699,Beiersdorf,Philippines,paid_search,monthly,3,1,46.06,0.209,2,0,0.369,36.3,1,0.4819,high
+CUST-01631,Levi's,Indonesia,organic,monthly,3,3,56.1,0.087,2,1,0.306,41.5,0,0.4803,high
+CUST-00587,Beiersdorf,Malaysia,display,monthly,8,3,49.3,0.195,2,1,0.343,26.5,1,0.4796,high
+CUST-01785,Leading Edge Health,Malaysia,display,monthly,14,1,71.55,0.224,1,4,0.297,30.9,0,0.4793,high
+CUST-00435,Leading Edge Health,Thailand,affiliate,annual,11,2,88.91,0.465,2,2,0.34,71.1,0,0.4756,high
+CUST-01999,Leading Edge Health,Malaysia,display,monthly,9,3,82.79,0.381,0,3,0.445,46.6,1,0.4724,high
+CUST-02259,Dyson,Thailand,paid_search,quarterly,18,2,132.14,0.414,3,1,0.333,61.9,1,0.4722,high
+CUST-02057,Dyson,Thailand,display,monthly,3,1,124.59,0.174,1,0,0.259,41.2,1,0.4707,high
+CUST-01068,Dyson,Malaysia,paid_search,monthly,2,3,110.0,0.33,2,0,0.445,30.7,1,0.4707,high
+CUST-01087,Levi's,Singapore,paid_search,monthly,15,1,46.62,0.402,1,1,0.079,16.8,0,0.4691,high
+CUST-02176,Dyson,Singapore,organic,monthly,6,3,135.44,0.461,1,1,0.495,33.9,1,0.4688,high
+CUST-02097,Levi's,Thailand,affiliate,annual,11,2,73.87,0.427,2,1,0.456,87.0,1,0.4685,high
+CUST-00471,Levi's,Malaysia,display,quarterly,1,3,55.38,0.196,2,0,0.296,49.8,0,0.4683,high
+CUST-01478,Dyson,Thailand,paid_search,annual,5,3,146.62,0.32,3,0,0.647,85.0,1,0.4666,high
+CUST-02267,Dyson,Indonesia,affiliate,monthly,32,1,95.07,0.277,5,1,0.127,28.0,0,0.4634,high
+CUST-01568,Levi's,Singapore,paid_search,annual,14,2,43.62,0.278,3,0,0.339,85.5,0,0.4619,high
+CUST-01084,Levi's,Indonesia,display,monthly,5,3,64.19,0.204,1,0,0.247,29.8,0,0.4615,high
+CUST-01003,Beiersdorf,Indonesia,display,monthly,7,1,35.01,0.104,2,1,0.425,29.9,0,0.4607,high
+CUST-00834,Dyson,Indonesia,affiliate,monthly,2,2,119.55,0.078,2,2,0.421,41.0,1,0.4583,high
+CUST-02537,Beiersdorf,Indonesia,display,quarterly,22,1,67.05,0.154,3,3,0.292,43.4,1,0.4577,high
+CUST-01435,Dyson,Singapore,display,monthly,4,2,135.07,0.303,1,0,0.469,32.0,0,0.4573,high
+CUST-02534,Dyson,Malaysia,email,quarterly,6,1,85.2,0.401,3,0,0.536,67.4,1,0.4568,high
+CUST-00275,Levi's,Indonesia,paid_search,monthly,7,1,50.31,0.313,0,1,0.272,46.9,0,0.4553,high
+CUST-02561,Dyson,Malaysia,affiliate,quarterly,6,3,187.09,0.401,1,2,0.348,52.5,1,0.455,high
+CUST-01678,Beiersdorf,Indonesia,affiliate,annual,8,1,48.4,0.271,2,1,0.291,75.0,1,0.4545,high
+CUST-00412,Dyson,Thailand,display,monthly,5,2,113.61,0.246,2,0,0.556,41.9,0,0.4541,high
+CUST-01488,Dyson,Singapore,affiliate,annual,5,1,149.39,0.148,2,0,0.02,68.4,0,0.4539,high
+CUST-01210,Dyson,Indonesia,display,monthly,9,3,98.89,0.454,2,0,0.699,37.6,1,0.4538,high
+CUST-01801,Dyson,Singapore,affiliate,monthly,7,1,101.98,0.362,1,1,0.162,22.7,1,0.4528,high
+CUST-00235,Dyson,Philippines,display,quarterly,6,1,130.05,0.093,3,0,0.152,38.8,0,0.4525,high
+CUST-01040,Beiersdorf,Thailand,paid_search,monthly,2,1,34.99,0.233,0,0,0.032,40.2,0,0.4514,high
+CUST-00262,Levi's,Malaysia,paid_search,monthly,15,3,34.44,0.394,3,0,0.61,49.0,0,0.4501,high
+CUST-01673,Dyson,Malaysia,paid_search,quarterly,16,1,172.25,0.198,4,2,0.511,37.7,1,0.4486,watch
+CUST-01174,Beiersdorf,Malaysia,display,annual,3,3,46.56,0.477,0,0,0.356,79.0,1,0.4484,watch

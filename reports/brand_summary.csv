@@ -1,0 +1,5 @@
+brand,customers,monthly_revenue,churn_rate,avg_risk_score,support_tickets_90d
+Dyson,595,75905.18,0.2235,0.2165,653
+Levi's,749,42717.73,0.215,0.2095,501
+Beiersdorf,622,25409.62,0.2074,0.2015,443
+Leading Edge Health,634,43732.48,0.1924,0.1813,478
