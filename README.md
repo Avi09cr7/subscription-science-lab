@@ -2,7 +2,7 @@
 
 A small, portfolio-ready data science project for e-commerce subscription analytics.
 
-This project mirrors the kind of work described in my CV: subscription reporting, ETL validation, campaign performance analysis, churn-risk modeling, and revenue forecasting for multi-brand e-commerce operations.
+This project mirrors the kind of work: subscription reporting, ETL validation, campaign performance analysis, churn-risk modeling, and revenue forecasting for multi-brand e-commerce operations.
 
 ## Project Story
 
