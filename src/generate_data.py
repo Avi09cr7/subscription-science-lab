@@ -15,7 +15,7 @@ def main() -> None:
     RAW_DIR.mkdir(parents=True, exist_ok=True)
 
     n_customers = 2600
-    brands = np.array(["Levi's", "Dyson", "Beiersdorf", "Leading Edge Health"])
+    brands = np.array(["Northstar Apparel", "Voltix Home", "DermaCo Labs", "VitalEdge Wellness"])
     regions = np.array(["Malaysia", "Singapore", "Thailand", "Indonesia", "Philippines"])
     channels = np.array(["paid_search", "affiliate", "display", "email", "organic"])
     plans = np.array(["monthly", "quarterly", "annual"])
@@ -28,17 +28,17 @@ def main() -> None:
     tenure = rng.integers(1, 37, n_customers)
     active_subscriptions = rng.integers(1, 4, n_customers)
     base_revenue = {
-        "Levi's": 52,
-        "Dyson": 118,
-        "Beiersdorf": 37,
-        "Leading Edge Health": 64,
+        "Northstar Apparel": 52,
+        "Voltix Home": 118,
+        "DermaCo Labs": 37,
+        "VitalEdge Wellness": 64,
     }
     monthly_revenue = np.array([base_revenue[item] for item in brand]) * rng.normal(1.0, 0.22, n_customers)
     monthly_revenue *= np.where(plan == "annual", 1.35, np.where(plan == "quarterly", 1.12, 1.0))
     monthly_revenue = np.clip(monthly_revenue, 12, None).round(2)
 
     discount_rate = np.clip(rng.beta(2, 8, n_customers) + (channel == "affiliate") * 0.06, 0, 0.55).round(3)
-    support_tickets_90d = rng.poisson(0.7 + (brand == "Dyson") * 0.35, n_customers)
+    support_tickets_90d = rng.poisson(0.7 + (brand == "Voltix Home") * 0.35, n_customers)
     late_shipments_90d = rng.poisson(0.45 + (region == "Indonesia") * 0.2, n_customers)
     email_engagement = np.clip(rng.normal(0.52, 0.18, n_customers), 0.02, 0.98).round(3)
     avg_days_between_orders = np.clip(rng.normal(31, 9, n_customers) + (plan == "quarterly") * 20 + (plan == "annual") * 45, 12, 120).round(1)
@@ -125,4 +125,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
