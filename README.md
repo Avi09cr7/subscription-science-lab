@@ -2,7 +2,11 @@
 
 A small, portfolio-ready data science project for e-commerce subscription analytics.
 
-This project mirrors the kind of work: subscription reporting, ETL validation, campaign performance analysis, churn-risk modeling, and revenue forecasting for multi-brand e-commerce operations.
+This project mirrors the kind of work described in my CV: subscription reporting, ETL validation, campaign performance analysis, churn-risk modeling, and revenue forecasting for multi-brand e-commerce operations.
+
+## Live Dashboard
+
+View the dashboard here: [Subscription Science Lab Dashboard](https://avi09cr7.github.io/subscription-science-lab/reports/dashboard.html)
 
 ## Project Story
 
@@ -49,7 +53,7 @@ python src/pipeline.py
 python src/build_dashboard.py
 ```
 
-Open `reports/dashboard.html` in a browser.
+Open `reports/dashboard.html` in a browser, or use the GitHub Pages link above after Pages is enabled for the repository.
 
 ## Current Results
 
