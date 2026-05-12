@@ -17,7 +17,7 @@ An e-commerce team manages subscription programs across brands, regions, plans, 
 - What revenue should the team expect over the next six months?
 - Which data quality checks should run before the analytics layer is trusted?
 
-The repo builds a reproducible synthetic dataset, validates it like an ETL handoff, trains a dependency-light churn model, and generates a decision-ready HTML dashboard. The data is generated locally by `src/generate_data.py`; it is not scraped from real brands and does not contain private customer data.
+The repo builds a reproducible synthetic dataset, validates it like an ETL handoff, trains a dependency-light churn model, and generates an interactive decision-ready HTML dashboard. The data is generated locally by `src/generate_data.py`; it is not scraped from real brands and does not contain private customer data.
 
 ## Why This Fits My Data Scientist Transition
 
@@ -25,6 +25,7 @@ The repo builds a reproducible synthetic dataset, validates it like an ETL hando
 - **Analytics:** customer KPIs, channel ROI, subscription revenue trends.
 - **ETL and QA:** schema checks, missing-value checks, duplicate checks, business-rule validation.
 - **Business communication:** final dashboard translates model output into actions.
+- **Interactive product thinking:** Three.js risk map, brand filters, risk drilldowns, forecast toggles, and a retention action simulator.
 - **E-commerce domain:** brands, SKUs, recurring plans, campaign channels, support issues, discounts, and retention.
 
 ## Repo Structure
@@ -54,6 +55,13 @@ python src/build_dashboard.py
 ```
 
 Open `reports/dashboard.html` in a browser, or use the GitHub Pages link above after Pages is enabled for the repository.
+
+## Interactive Dashboard Features
+
+- 3D churn-risk constellation built with Three.js, with a canvas fallback if the CDN is unavailable.
+- Brand and risk-segment filters that update the 3D map, customer table, campaign ROI, and distribution view.
+- Retention action simulator for estimating protected revenue, campaign cost, net impact, and break-even save rate.
+- Forecast scenario toggle for conservative, expected, and optimistic revenue paths.
 
 ## Current Results
 
