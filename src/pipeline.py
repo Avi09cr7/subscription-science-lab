@@ -9,6 +9,7 @@ import pandas as pd
 from leakage import build_leakage_outputs
 from model import classification_metrics, predict_proba, train_logistic_regression
 from playbooks import build_playbook_outputs
+from segments import build_segment_outputs
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -186,6 +187,7 @@ def main() -> None:
         REPORTS_DIR,
     )
     playbook_roi, experiment_backlog, owner_workload = build_playbook_outputs(action_queue)
+    segment_opportunities, segment_issue_matrix = build_segment_outputs(scored_customers, action_queue)
 
     scored_customers.to_csv(PROCESSED_DIR / "customers_scored.csv", index=False)
     scored_customers.sort_values("churn_risk_score", ascending=False).head(100).to_csv(
@@ -198,6 +200,8 @@ def main() -> None:
     playbook_roi.to_csv(REPORTS_DIR / "recovery_playbook_roi.csv", index=False)
     experiment_backlog.to_csv(REPORTS_DIR / "experiment_backlog.csv", index=False)
     owner_workload.to_csv(REPORTS_DIR / "owner_workload.csv", index=False)
+    segment_opportunities.to_csv(REPORTS_DIR / "segment_opportunity_report.csv", index=False)
+    segment_issue_matrix.to_csv(REPORTS_DIR / "segment_issue_matrix.csv", index=False)
 
     metrics_payload = {
         "validation_checks": validation_checks,
@@ -211,6 +215,12 @@ def main() -> None:
         "playbook_net_impact": round(float(playbook_roi["net_impact"].sum()), 2),
         "playbooks_recommended": int(len(playbook_roi)),
         "experiments_ready": int(len(experiment_backlog)),
+        "priority_segments": int(len(segment_opportunities)),
+        "top_segment_expected_value": (
+            0
+            if segment_opportunities.empty
+            else round(float(segment_opportunities["expected_value"].max()), 2)
+        ),
     }
     (REPORTS_DIR / "model_metrics.json").write_text(json.dumps(metrics_payload, indent=2), encoding="utf-8")
     print("Pipeline complete. Reports written to reports/.")

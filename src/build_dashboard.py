@@ -40,6 +40,8 @@ def main() -> None:
     playbooks = pd.read_csv(REPORTS_DIR / "recovery_playbook_roi.csv")
     experiments = pd.read_csv(REPORTS_DIR / "experiment_backlog.csv")
     owner_workload = pd.read_csv(REPORTS_DIR / "owner_workload.csv")
+    segments = pd.read_csv(REPORTS_DIR / "segment_opportunity_report.csv")
+    segment_issues = pd.read_csv(REPORTS_DIR / "segment_issue_matrix.csv")
     raw_files = sorted(path.name for path in RAW_DIR.glob("*.csv"))
 
     payload = {
@@ -52,6 +54,8 @@ def main() -> None:
         "playbooks": playbooks.to_dict(orient="records"),
         "experiments": experiments.to_dict(orient="records"),
         "ownerWorkload": owner_workload.to_dict(orient="records"),
+        "segments": segments.to_dict(orient="records"),
+        "segmentIssues": segment_issues.to_dict(orient="records"),
         "rawFiles": raw_files,
         "issueMeta": ISSUE_META,
     }
@@ -511,6 +515,42 @@ def main() -> None:
       color: var(--body);
       font-size: 12px;
     }
+    .segment-brief {
+      display: grid;
+      gap: 16px;
+    }
+    .segment-brief h3 {
+      margin: 0;
+      color: var(--ink);
+      font-size: 28px;
+      line-height: 1.2;
+    }
+    .segment-brief p {
+      margin: 0;
+      color: var(--body);
+      line-height: 1.55;
+    }
+    .segment-stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .segment-stat {
+      border: 1px solid var(--hairline-strong);
+      border-radius: 8px;
+      background: var(--surface-elevated);
+      padding: 12px;
+    }
+    .segment-stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 7px;
+    }
+    .segment-stat strong {
+      color: var(--primary);
+      font-size: 20px;
+    }
     .source-list {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -547,6 +587,7 @@ def main() -> None:
       header { padding: 48px 0 34px; }
       .kpi-grid, .source-list { grid-template-columns: 1fr; }
       .metric-strip { grid-template-columns: 1fr; }
+      .segment-stats { grid-template-columns: 1fr; }
       section, .brief-panel { padding: 20px; }
       .brief-item, .recovery-row { grid-template-columns: 1fr; }
       .amount { text-align: left; }
@@ -608,6 +649,7 @@ def main() -> None:
         <a href="#leakage">Leakage</a>
         <a href="#queue">Action Queue</a>
         <a href="#playbooks">Playbooks</a>
+        <a href="#segments">Segments</a>
         <a href="#payments">Payments</a>
         <a href="#inventory">Inventory</a>
       </div>
@@ -725,8 +767,47 @@ def main() -> None:
           </div>
           <table>
             <thead><tr><th>Owner</th><th>Customers</th><th>Net Impact</th><th>Best Next Playbook</th></tr></thead>
-            <tbody id="ownerRows"></tbody>
-          </table>
+          <tbody id="ownerRows"></tbody>
+        </table>
+      </section>
+    </div>
+
+      <section id="segments">
+        <div class="section-head">
+          <div>
+            <h2>Segment Opportunity Map</h2>
+            <p>Ranks brand, channel, and plan combinations by recovery value, churn risk, action density, dominant issue, and owner.</p>
+          </div>
+          <span class="badge">Step 4</span>
+        </div>
+        <div class="metric-strip" id="segmentSummary"></div>
+        <table>
+          <thead><tr><th>Segment</th><th>Customers</th><th>Action Rate</th><th>Value</th><th>Dominant Issue</th><th>Owner</th><th>Score</th></tr></thead>
+          <tbody id="segmentRows"></tbody>
+        </table>
+      </section>
+
+      <div class="grid">
+        <section>
+          <div class="section-head">
+            <div>
+              <h2>Segment Issue Mix</h2>
+              <p>Shows the operational pattern inside each priority segment instead of treating every customer issue as isolated.</p>
+            </div>
+            <span class="badge">Root Cause</span>
+          </div>
+          <div class="experiment-list" id="segmentIssueRows"></div>
+        </section>
+
+        <section>
+          <div class="section-head">
+            <div>
+              <h2>Where To Start</h2>
+              <p>The highest-scoring segment translated into a client-ready recommendation.</p>
+            </div>
+            <span class="badge">Focus</span>
+          </div>
+          <div class="segment-brief" id="segmentBrief"></div>
         </section>
       </div>
 
@@ -803,6 +884,10 @@ def main() -> None:
       playbookRows: document.getElementById("playbookRows"),
       experimentRows: document.getElementById("experimentRows"),
       ownerRows: document.getElementById("ownerRows"),
+      segmentSummary: document.getElementById("segmentSummary"),
+      segmentRows: document.getElementById("segmentRows"),
+      segmentIssueRows: document.getElementById("segmentIssueRows"),
+      segmentBrief: document.getElementById("segmentBrief"),
       sourceList: document.getElementById("sourceList")
     };
 
@@ -961,6 +1046,61 @@ def main() -> None:
         </tr>
       `).join("");
     }
+    function issueLabel(issue) {
+      return data.issueMeta[issue]?.label || issue.replaceAll("_", " ");
+    }
+    function renderSegments() {
+      const topSegment = data.segments[0];
+      const topValue = Math.max(...data.segments.map(row => Number(row.expected_value || 0)), 0);
+      const topActionRate = Math.max(...data.segments.map(row => Number(row.action_rate || 0)), 0);
+      const avgScore = data.segments.length
+        ? data.segments.reduce((sum, row) => sum + Number(row.priority_score || 0), 0) / data.segments.length
+        : 0;
+      els.segmentSummary.innerHTML = [
+        ["Priority segments", number.format(data.segments.length)],
+        ["Top segment value", money.format(topValue)],
+        ["Highest action rate", percent.format(topActionRate)],
+        ["Avg priority score", avgScore.toFixed(1)]
+      ].map(([label, value]) => `
+        <div class="metric-tile"><span>${label}</span><strong>${value}</strong></div>
+      `).join("");
+
+      els.segmentRows.innerHTML = data.segments.map(row => `
+        <tr>
+          <td data-label="Segment"><strong>${row.segment_name}</strong><br><span class="muted">${row.recommended_playbook}</span></td>
+          <td data-label="Customers">${number.format(row.customers)}</td>
+          <td data-label="Action Rate">${percent.format(row.action_rate)}</td>
+          <td data-label="Value">${money.format(row.expected_value)}</td>
+          <td data-label="Dominant">${issueLabel(row.dominant_issue)}</td>
+          <td data-label="Owner"><span class="owner-pill">${row.owner}</span></td>
+          <td data-label="Score">${Number(row.priority_score).toFixed(1)}</td>
+        </tr>
+      `).join("");
+
+      els.segmentIssueRows.innerHTML = data.segmentIssues.slice(0, 6).map(row => {
+        const chips = Object.keys(data.issueMeta)
+          .filter(issue => Number(row[issue] || 0) > 0)
+          .map(issue => `<span>${issueLabel(issue)}: ${number.format(row[issue])}</span>`)
+          .join("");
+        return `<article class="experiment-card">
+          <strong>${row.segment_name}</strong>
+          <p>${number.format(row.total_issue_mentions)} issue signals across this segment.</p>
+          <div class="experiment-meta">${chips}</div>
+        </article>`;
+      }).join("");
+
+      els.segmentBrief.innerHTML = topSegment ? `
+        <h3>${topSegment.segment_name}</h3>
+        <p>${topSegment.suggested_action}</p>
+        <div class="segment-stats">
+          <div class="segment-stat"><span>Priority score</span><strong>${Number(topSegment.priority_score).toFixed(1)}</strong></div>
+          <div class="segment-stat"><span>Expected value</span><strong>${money.format(topSegment.expected_value)}</strong></div>
+          <div class="segment-stat"><span>Action density</span><strong>${percent.format(topSegment.action_rate)}</strong></div>
+          <div class="segment-stat"><span>Dominant issue</span><strong>${issueLabel(topSegment.dominant_issue)}</strong></div>
+        </div>
+        <p>Owner: ${topSegment.owner}. Start with ${number.format(topSegment.action_customers)} queued customers inside a base of ${number.format(topSegment.customers)} subscribers.</p>
+      ` : `<p>No priority segments found.</p>`;
+    }
     function renderPayments() {
       const max = Math.max(...data.payments.map(row => row.open_amount), 1);
       els.paymentRows.innerHTML = data.payments.map(row => {
@@ -994,6 +1134,7 @@ def main() -> None:
     renderPlaybooks();
     renderExperiments();
     renderOwnerWorkload();
+    renderSegments();
     renderPayments();
     renderSkuRisk();
     renderSources();

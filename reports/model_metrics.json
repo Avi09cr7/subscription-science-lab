@@ -25,5 +25,7 @@
   "leakage_categories": 6,
   "playbook_net_impact": 3192.84,
   "playbooks_recommended": 4,
-  "experiments_ready": 4
+  "experiments_ready": 4,
+  "priority_segments": 12,
+  "top_segment_expected_value": 2226.69
 }

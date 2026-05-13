@@ -1,0 +1,13 @@
+segment_name,brand,acquisition_channel,plan,failed_payment,late_fulfillment,discount_margin_leak,support_escalation,total_issue_mentions
+Voltix Home / organic / monthly,Voltix Home,organic,monthly,2,5,5,3,15
+Voltix Home / affiliate / monthly,Voltix Home,affiliate,monthly,2,5,4,4,15
+Voltix Home / display / monthly,Voltix Home,display,monthly,4,7,0,3,14
+Voltix Home / paid_search / monthly,Voltix Home,paid_search,monthly,1,3,3,3,10
+Voltix Home / display / annual,Voltix Home,display,annual,3,3,1,1,8
+Voltix Home / email / annual,Voltix Home,email,annual,1,3,1,1,6
+Voltix Home / email / monthly,Voltix Home,email,monthly,1,1,2,2,6
+Northstar Apparel / display / quarterly,Northstar Apparel,display,quarterly,0,3,1,1,5
+Voltix Home / paid_search / quarterly,Voltix Home,paid_search,quarterly,1,1,1,2,5
+VitalEdge Wellness / paid_search / annual,VitalEdge Wellness,paid_search,annual,1,2,0,1,4
+VitalEdge Wellness / affiliate / monthly,VitalEdge Wellness,affiliate,monthly,0,1,2,1,4
+Voltix Home / email / quarterly,Voltix Home,email,quarterly,0,0,2,2,4
