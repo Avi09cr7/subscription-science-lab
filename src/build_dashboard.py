@@ -42,6 +42,10 @@ def main() -> None:
     owner_workload = pd.read_csv(REPORTS_DIR / "owner_workload.csv")
     segments = pd.read_csv(REPORTS_DIR / "segment_opportunity_report.csv")
     segment_issues = pd.read_csv(REPORTS_DIR / "segment_issue_matrix.csv")
+    monitoring_alerts = pd.read_csv(REPORTS_DIR / "monitoring_alerts.csv")
+    metric_changes = pd.read_csv(REPORTS_DIR / "weekly_metric_changes.csv")
+    data_quality = pd.read_csv(REPORTS_DIR / "data_quality_scorecard.csv")
+    monitoring_summary = json.loads((REPORTS_DIR / "monitoring_summary.json").read_text(encoding="utf-8"))
     raw_files = sorted(path.name for path in RAW_DIR.glob("*.csv"))
 
     payload = {
@@ -56,6 +60,10 @@ def main() -> None:
         "ownerWorkload": owner_workload.to_dict(orient="records"),
         "segments": segments.to_dict(orient="records"),
         "segmentIssues": segment_issues.to_dict(orient="records"),
+        "monitoringAlerts": monitoring_alerts.to_dict(orient="records"),
+        "metricChanges": metric_changes.to_dict(orient="records"),
+        "dataQuality": data_quality.to_dict(orient="records"),
+        "monitoringSummary": monitoring_summary,
         "rawFiles": raw_files,
         "issueMeta": ISSUE_META,
     }
@@ -481,6 +489,43 @@ def main() -> None:
       border-color: var(--blue);
       color: #93c5fd;
     }
+    .severity {
+      display: inline-flex;
+      width: fit-content;
+      border-radius: 9999px;
+      padding: 4px 10px;
+      border: 1px solid var(--hairline-strong);
+      background: var(--surface-elevated);
+      color: var(--body-strong);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .severity.critical {
+      border-color: var(--error);
+      color: #fca5a5;
+    }
+    .severity.warning {
+      border-color: var(--warning);
+      color: #fcd34d;
+    }
+    .quality-pill {
+      display: inline-flex;
+      width: fit-content;
+      border-radius: 9999px;
+      padding: 4px 10px;
+      border: 1px solid rgba(34, 197, 94, .55);
+      color: #86efac;
+      background: rgba(34, 197, 94, .08);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .quality-pill.review {
+      border-color: var(--warning);
+      color: #fcd34d;
+      background: rgba(245, 158, 11, .08);
+    }
     .experiment-list {
       display: grid;
       gap: 14px;
@@ -650,6 +695,7 @@ def main() -> None:
         <a href="#queue">Action Queue</a>
         <a href="#playbooks">Playbooks</a>
         <a href="#segments">Segments</a>
+        <a href="#monitoring">Monitor</a>
         <a href="#payments">Payments</a>
         <a href="#inventory">Inventory</a>
       </div>
@@ -811,6 +857,51 @@ def main() -> None:
         </section>
       </div>
 
+      <section id="monitoring">
+        <div class="section-head">
+          <div>
+            <h2>Monitoring & Alert Console</h2>
+            <p>Flags KPI movement, campaign payback gaps, payment build-up, fulfillment SLA risk, stockouts, and data-quality health.</p>
+          </div>
+          <span class="badge">Step 5</span>
+        </div>
+        <div class="metric-strip" id="monitoringSummary"></div>
+        <table>
+          <thead><tr><th>Severity</th><th>Owner</th><th>Alert</th><th>Metric</th><th>Impact</th><th>Action</th></tr></thead>
+          <tbody id="alertRows"></tbody>
+        </table>
+      </section>
+
+      <div class="grid">
+        <section>
+          <div class="section-head">
+            <div>
+              <h2>Weekly Metric Movement</h2>
+              <p>Latest month compared with the trailing three-month baseline by brand.</p>
+            </div>
+            <span class="badge">Trend</span>
+          </div>
+          <table>
+            <thead><tr><th>Brand</th><th>Revenue</th><th>Revenue Change</th><th>Customers</th><th>Churn Delta</th></tr></thead>
+            <tbody id="metricChangeRows"></tbody>
+          </table>
+        </section>
+
+        <section>
+          <div class="section-head">
+            <div>
+              <h2>Data Quality Scorecard</h2>
+              <p>Pipeline checks that decide whether the dashboard is safe to trust this week.</p>
+            </div>
+            <span class="badge">Trust Layer</span>
+          </div>
+          <table>
+            <thead><tr><th>Check</th><th>Status</th><th>Value</th><th>Owner</th></tr></thead>
+            <tbody id="qualityRows"></tbody>
+          </table>
+        </section>
+      </div>
+
       <div class="grid equal">
         <section id="payments">
           <div class="section-head">
@@ -888,6 +979,10 @@ def main() -> None:
       segmentRows: document.getElementById("segmentRows"),
       segmentIssueRows: document.getElementById("segmentIssueRows"),
       segmentBrief: document.getElementById("segmentBrief"),
+      monitoringSummary: document.getElementById("monitoringSummary"),
+      alertRows: document.getElementById("alertRows"),
+      metricChangeRows: document.getElementById("metricChangeRows"),
+      qualityRows: document.getElementById("qualityRows"),
       sourceList: document.getElementById("sourceList")
     };
 
@@ -1101,6 +1196,55 @@ def main() -> None:
         <p>Owner: ${topSegment.owner}. Start with ${number.format(topSegment.action_customers)} queued customers inside a base of ${number.format(topSegment.customers)} subscribers.</p>
       ` : `<p>No priority segments found.</p>`;
     }
+    function severityClass(severity) {
+      return String(severity).toLowerCase();
+    }
+    function renderMonitoring() {
+      const qualityRate = data.monitoringSummary.checks_run
+        ? data.monitoringSummary.healthy_checks / data.monitoringSummary.checks_run
+        : 0;
+      const topAlert = data.monitoringSummary.top_alert || {};
+      els.monitoringSummary.innerHTML = [
+        ["Open alerts", number.format(data.monitoringSummary.open_alerts || 0)],
+        ["Critical alerts", number.format(data.monitoringSummary.critical_alerts || 0)],
+        ["Healthy checks", percent.format(qualityRate)],
+        ["Top owner", topAlert.owner || "None"]
+      ].map(([label, value]) => `
+        <div class="metric-tile"><span>${label}</span><strong>${value}</strong></div>
+      `).join("");
+
+      els.alertRows.innerHTML = data.monitoringAlerts.slice(0, 10).map(row => `
+        <tr>
+          <td data-label="Severity"><span class="severity ${severityClass(row.severity)}">${row.severity}</span></td>
+          <td data-label="Owner"><span class="owner-pill">${row.owner}</span></td>
+          <td data-label="Alert"><strong>${row.alert_type}</strong><br><span class="muted">${row.entity}</span></td>
+          <td data-label="Metric">${row.metric}<br><span class="muted">${Number(row.current_value).toFixed(2)} vs ${Number(row.baseline_value).toFixed(2)}</span></td>
+          <td data-label="Impact">${money.format(row.impact_value)}</td>
+          <td data-label="Action">${row.recommendation}</td>
+        </tr>
+      `).join("") || `<tr><td data-label="Status" colspan="6">No monitoring alerts found.</td></tr>`;
+    }
+    function renderMetricChanges() {
+      els.metricChangeRows.innerHTML = data.metricChanges.map(row => `
+        <tr>
+          <td data-label="Brand"><strong>${row.brand}</strong><br><span class="muted">${row.latest_month}</span></td>
+          <td data-label="Revenue">${money.format(row.current_revenue)}</td>
+          <td data-label="Rev Change">${percent.format(row.revenue_change_pct)}</td>
+          <td data-label="Customers">${number.format(row.current_active_customers)}<br><span class="muted">${percent.format(row.active_customer_change_pct)}</span></td>
+          <td data-label="Churn Delta">${percent.format(row.churn_rate_delta)}</td>
+        </tr>
+      `).join("");
+    }
+    function renderDataQuality() {
+      els.qualityRows.innerHTML = data.dataQuality.map(row => `
+        <tr>
+          <td data-label="Check"><strong>${row.check}</strong><br><span class="muted">${row.expectation}</span></td>
+          <td data-label="Status"><span class="quality-pill ${row.status === "Healthy" ? "" : "review"}">${row.status}</span></td>
+          <td data-label="Value">${number.format(row.value)}</td>
+          <td data-label="Owner"><span class="owner-pill">${row.owner}</span></td>
+        </tr>
+      `).join("");
+    }
     function renderPayments() {
       const max = Math.max(...data.payments.map(row => row.open_amount), 1);
       els.paymentRows.innerHTML = data.payments.map(row => {
@@ -1135,6 +1279,9 @@ def main() -> None:
     renderExperiments();
     renderOwnerWorkload();
     renderSegments();
+    renderMonitoring();
+    renderMetricChanges();
+    renderDataQuality();
     renderPayments();
     renderSkuRisk();
     renderSources();

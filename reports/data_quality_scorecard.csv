@@ -1,0 +1,9 @@
+check,value,status,owner,expectation
+Customer rows,2600,Healthy,Data Engineering,"Expected at least 2,500 customer records."
+Customer duplicates,0,Healthy,Data Engineering,Customer IDs must remain unique.
+Customer missing values,0,Healthy,Data Engineering,No null values expected in modeled customer fields.
+Monthly revenue coverage,15,Healthy,Analytics,At least 12 months are needed for trend monitoring.
+Campaign ROI inputs,20,Healthy,Marketing Ops,"Campaign spend, conversions, and revenue are required."
+Payment events coverage,2600,Healthy,Billing Ops,Each customer should have one current invoice event.
+Fulfillment sample coverage,1800,Healthy,Operations,"Recent fulfillment sample should cover at least 1,500 orders."
+Inventory SKU coverage,12,Healthy,Inventory,Each subscription SKU should have inventory coverage.

@@ -1,0 +1,20 @@
+{
+  "open_alerts": 20,
+  "critical_alerts": 11,
+  "warning_alerts": 9,
+  "top_alert": {
+    "rank": 1,
+    "severity": "Critical",
+    "owner": "Marketing",
+    "alert_type": "Campaign payback",
+    "entity": "VitalEdge Wellness / display",
+    "metric": "Campaign ROI",
+    "current_value": -0.15,
+    "baseline_value": 1.0,
+    "change_pct": -1.15,
+    "impact_value": 14608.21,
+    "recommendation": "Cap spend until payback and retention quality recover."
+  },
+  "healthy_checks": 8,
+  "checks_run": 8
+}

@@ -1,0 +1,5 @@
+brand,latest_month,current_revenue,baseline_revenue,revenue_change_pct,current_active_customers,baseline_active_customers,active_customer_change_pct,current_churn_rate,baseline_churn_rate,churn_rate_delta
+Northstar Apparel,2026-03-01,40110.17,36518.36,0.0984,777,694.3,0.1191,0.0439,0.0717,-0.0278
+Voltix Home,2026-03-01,90840.9,73834.76,0.2303,724,667.0,0.0855,0.0606,0.0584,0.0022
+DermaCo Labs,2026-03-01,28810.27,23334.59,0.2347,693,654.7,0.0586,0.04,0.0545,-0.0145
+VitalEdge Wellness,2026-03-01,44510.43,41380.24,0.0756,751,665.0,0.1293,0.0754,0.06,0.0154

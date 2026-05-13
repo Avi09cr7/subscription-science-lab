@@ -1,0 +1,21 @@
+rank,severity,owner,alert_type,entity,metric,current_value,baseline_value,change_pct,impact_value,recommendation
+1,Critical,Marketing,Campaign payback,VitalEdge Wellness / display,Campaign ROI,-0.15,1.0,-1.15,14608.21,Cap spend until payback and retention quality recover.
+2,Critical,Marketing,Campaign payback,DermaCo Labs / paid_search,Campaign ROI,-0.1074,1.0,-1.1074,14162.87,Cap spend until payback and retention quality recover.
+3,Critical,Marketing,Campaign payback,Northstar Apparel / organic,Campaign ROI,-0.0494,1.0,-1.0494,10855.27,Cap spend until payback and retention quality recover.
+4,Critical,Inventory,Stockout risk,Northstar Apparel / NA-TEE-01,SKU stockout risk,0.5676,0.25,0.3176,7172.03,Advance purchase order or shift demand to substitute SKUs.
+5,Critical,Inventory,Stockout risk,DermaCo Labs / DL-CLEANSER-03,SKU stockout risk,0.5842,0.25,0.3342,5990.94,Advance purchase order or shift demand to substitute SKUs.
+6,Critical,Inventory,Stockout risk,DermaCo Labs / DL-SERUM-01,SKU stockout risk,0.51,0.25,0.26,3841.68,Advance purchase order or shift demand to substitute SKUs.
+7,Critical,Billing Ops,Failed payment build-up,Voltix Home,Open failed payment rate,0.042,0.025,0.017,3435.64,Prioritize smart dunning and payment-link recovery for high-value invoices.
+8,Critical,Inventory,Stockout risk,DermaCo Labs / DL-CREAM-02,SKU stockout risk,0.6667,0.25,0.4167,2194.92,Advance purchase order or shift demand to substitute SKUs.
+9,Critical,Operations,Fulfillment SLA,DermaCo Labs,Late fulfillment rate,0.3955,0.18,0.2155,174.0,Escalate late-shipment rescue workflow for customers near renewal.
+10,Critical,Operations,Fulfillment SLA,VitalEdge Wellness,Late fulfillment rate,0.3655,0.18,0.1855,159.0,Escalate late-shipment rescue workflow for customers near renewal.
+11,Critical,Operations,Fulfillment SLA,Voltix Home,Late fulfillment rate,0.361,0.18,0.181,148.0,Escalate late-shipment rescue workflow for customers near renewal.
+12,Warning,Marketing,Campaign payback,DermaCo Labs / email,Campaign ROI,0.0985,1.0,-0.9015,8358.88,Cap spend until payback and retention quality recover.
+13,Warning,Marketing,Campaign payback,Northstar Apparel / affiliate,Campaign ROI,0.2838,1.0,-0.7162,6848.64,Cap spend until payback and retention quality recover.
+14,Warning,Marketing,Campaign payback,DermaCo Labs / organic,Campaign ROI,0.2901,1.0,-0.7099,3926.86,Cap spend until payback and retention quality recover.
+15,Warning,Inventory,Stockout risk,VitalEdge Wellness / VW-BUNDLE-03,SKU stockout risk,0.4466,0.25,0.1966,3805.66,Advance purchase order or shift demand to substitute SKUs.
+16,Warning,Retention,Churn movement,VitalEdge Wellness,Monthly churn rate,0.0754,0.06,0.0154,3356.09,"Inspect support, discount, and late-delivery segments before next renewal cycle."
+17,Warning,Billing Ops,Failed payment build-up,VitalEdge Wellness,Open failed payment rate,0.0331,0.025,0.0081,1351.02,Prioritize smart dunning and payment-link recovery for high-value invoices.
+18,Warning,Billing Ops,Failed payment build-up,Northstar Apparel,Open failed payment rate,0.0267,0.025,0.0017,1050.84,Prioritize smart dunning and payment-link recovery for high-value invoices.
+19,Warning,Billing Ops,Failed payment build-up,DermaCo Labs,Open failed payment rate,0.0305,0.025,0.0055,789.02,Prioritize smart dunning and payment-link recovery for high-value invoices.
+20,Warning,Operations,Fulfillment SLA,Northstar Apparel,Late fulfillment rate,0.3301,0.18,0.1501,170.0,Escalate late-shipment rescue workflow for customers near renewal.

@@ -27,5 +27,7 @@
   "playbooks_recommended": 4,
   "experiments_ready": 4,
   "priority_segments": 12,
-  "top_segment_expected_value": 2226.69
+  "top_segment_expected_value": 2226.69,
+  "open_monitoring_alerts": 20,
+  "critical_monitoring_alerts": 11
 }
