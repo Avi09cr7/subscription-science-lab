@@ -22,5 +22,8 @@
   "total_monthly_revenue": 187765.01,
   "total_revenue_at_risk": 167961.3,
   "action_queue_items": 75,
-  "leakage_categories": 6
+  "leakage_categories": 6,
+  "playbook_net_impact": 3192.84,
+  "playbooks_recommended": 4,
+  "experiments_ready": 4
 }

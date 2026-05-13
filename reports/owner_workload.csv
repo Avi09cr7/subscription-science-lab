@@ -1,0 +1,5 @@
+owner,playbooks,eligible_customers,gross_value,total_cost,expected_net_impact,best_next_playbook
+Operations,1,42,5920.65,378.0,1042.96,Late-shipment rescue workflow
+Billing Ops,1,18,2510.09,22.5,1031.74,Smart dunning and payment-link recovery
+Customer Success,1,30,5297.3,420.0,639.46,Priority callback for high-value subscribers
+Growth,1,29,3626.1,101.5,478.68,Offer ladder instead of blanket discounts

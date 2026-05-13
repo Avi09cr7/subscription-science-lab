@@ -37,6 +37,9 @@ def main() -> None:
     actions = enrich_actions(pd.read_csv(REPORTS_DIR / "action_queue.csv"))
     payments = pd.read_csv(REPORTS_DIR / "payment_recovery_summary.csv")
     sku_risk = pd.read_csv(REPORTS_DIR / "sku_risk_report.csv")
+    playbooks = pd.read_csv(REPORTS_DIR / "recovery_playbook_roi.csv")
+    experiments = pd.read_csv(REPORTS_DIR / "experiment_backlog.csv")
+    owner_workload = pd.read_csv(REPORTS_DIR / "owner_workload.csv")
     raw_files = sorted(path.name for path in RAW_DIR.glob("*.csv"))
 
     payload = {
@@ -46,6 +49,9 @@ def main() -> None:
         "actions": actions.to_dict(orient="records"),
         "payments": payments.to_dict(orient="records"),
         "skuRisk": sku_risk.to_dict(orient="records"),
+        "playbooks": playbooks.to_dict(orient="records"),
+        "experiments": experiments.to_dict(orient="records"),
+        "ownerWorkload": owner_workload.to_dict(orient="records"),
         "rawFiles": raw_files,
         "issueMeta": ISSUE_META,
     }
@@ -78,6 +84,7 @@ def main() -> None:
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
+    [id] { scroll-margin-top: 84px; }
     body {
       margin: 0;
       color: var(--ink);
@@ -425,6 +432,85 @@ def main() -> None:
       color: var(--body);
       font-size: 14px;
     }
+    .metric-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .metric-tile {
+      min-height: 92px;
+      display: grid;
+      align-content: space-between;
+      gap: 10px;
+      padding: 16px;
+      border: 1px solid var(--hairline-strong);
+      border-radius: 8px;
+      background: var(--surface-elevated);
+    }
+    .metric-tile span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .metric-tile strong {
+      color: var(--primary);
+      font-size: 24px;
+      line-height: 1;
+    }
+    .decision-pill {
+      display: inline-flex;
+      width: fit-content;
+      border-radius: 9999px;
+      padding: 4px 10px;
+      border: 1px solid var(--hairline-strong);
+      background: var(--surface-elevated);
+      color: var(--body-strong);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .decision-pill.scale {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .decision-pill.test {
+      border-color: var(--blue);
+      color: #93c5fd;
+    }
+    .experiment-list {
+      display: grid;
+      gap: 14px;
+    }
+    .experiment-card {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid var(--hairline-strong);
+      border-radius: 8px;
+      background: var(--surface-elevated);
+    }
+    .experiment-card strong {
+      color: var(--ink);
+      line-height: 1.35;
+    }
+    .experiment-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .experiment-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .experiment-meta span {
+      border: 1px solid var(--hairline-strong);
+      border-radius: 9999px;
+      padding: 4px 9px;
+      color: var(--body);
+      font-size: 12px;
+    }
     .source-list {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -460,6 +546,7 @@ def main() -> None:
     @media (max-width: 680px) {
       header { padding: 48px 0 34px; }
       .kpi-grid, .source-list { grid-template-columns: 1fr; }
+      .metric-strip { grid-template-columns: 1fr; }
       section, .brief-panel { padding: 20px; }
       .brief-item, .recovery-row { grid-template-columns: 1fr; }
       .amount { text-align: left; }
@@ -520,6 +607,7 @@ def main() -> None:
       <div class="nav-links">
         <a href="#leakage">Leakage</a>
         <a href="#queue">Action Queue</a>
+        <a href="#playbooks">Playbooks</a>
         <a href="#payments">Payments</a>
         <a href="#inventory">Inventory</a>
       </div>
@@ -533,7 +621,7 @@ def main() -> None:
         <p class="lead">A decision cockpit for e-commerce subscription teams: detect where money is leaking, explain why, assign an owner, and rank the next best recovery actions.</p>
         <div class="hero-actions">
           <a class="button" href="#leakage">Review leakage stack</a>
-          <a class="button secondary" href="#payments">Payment recovery</a>
+          <a class="button secondary" href="#playbooks">Compare playbooks</a>
         </div>
       </div>
       <aside class="brief-panel" aria-label="Weekly action brief">
@@ -555,7 +643,7 @@ def main() -> None:
     <main>
       <div class="kpi-grid" aria-label="Executive KPIs">
         <div class="kpi"><span>Action queue</span><strong id="kpiActions"></strong></div>
-        <div class="kpi"><span>Leak categories</span><strong id="kpiCategories"></strong></div>
+        <div class="kpi"><span>Net recovery upside</span><strong id="kpiNetImpact"></strong></div>
         <div class="kpi"><span>Open failed payments</span><strong id="kpiFailedPayments"></strong></div>
         <div class="kpi"><span>SKU margin exposure</span><strong id="kpiSkuExposure"></strong></div>
       </div>
@@ -597,6 +685,48 @@ def main() -> None:
             <span class="badge">Signal</span>
           </div>
           <div class="recovery-grid" id="issueMix"></div>
+        </section>
+      </div>
+
+      <section id="playbooks">
+        <div class="section-head">
+          <div>
+            <h2>Recovery Playbook ROI</h2>
+            <p>Turns the action queue into an operating plan: expected save rate, cost to execute, net impact, and the decision to scale or test.</p>
+          </div>
+          <span class="badge">Step 3</span>
+        </div>
+        <div class="metric-strip" id="playbookSummary"></div>
+        <table>
+          <thead><tr><th>Playbook</th><th>Owner</th><th>Eligible</th><th>Net Impact</th><th>ROI</th><th>Decision</th></tr></thead>
+          <tbody id="playbookRows"></tbody>
+        </table>
+      </section>
+
+      <div class="grid">
+        <section>
+          <div class="section-head">
+            <div>
+              <h2>Experiment Backlog</h2>
+              <p>Each playbook has a testable hypothesis, sample split, primary metric, and decision rule.</p>
+            </div>
+            <span class="badge">Test Plan</span>
+          </div>
+          <div class="experiment-list" id="experimentRows"></div>
+        </section>
+
+        <section>
+          <div class="section-head">
+            <div>
+              <h2>Owner Workload</h2>
+              <p>Shows where the recovery work lands and the best next playbook for each team.</p>
+            </div>
+            <span class="badge">Ownership</span>
+          </div>
+          <table>
+            <thead><tr><th>Owner</th><th>Customers</th><th>Net Impact</th><th>Best Next Playbook</th></tr></thead>
+            <tbody id="ownerRows"></tbody>
+          </table>
         </section>
       </div>
 
@@ -658,7 +788,7 @@ def main() -> None:
       briefToday: document.getElementById("briefToday"),
       briefList: document.getElementById("briefList"),
       kpiActions: document.getElementById("kpiActions"),
-      kpiCategories: document.getElementById("kpiCategories"),
+      kpiNetImpact: document.getElementById("kpiNetImpact"),
       kpiFailedPayments: document.getElementById("kpiFailedPayments"),
       kpiSkuExposure: document.getElementById("kpiSkuExposure"),
       leakageRows: document.getElementById("leakageRows"),
@@ -669,6 +799,10 @@ def main() -> None:
       issueMix: document.getElementById("issueMix"),
       paymentRows: document.getElementById("paymentRows"),
       skuRows: document.getElementById("skuRows"),
+      playbookSummary: document.getElementById("playbookSummary"),
+      playbookRows: document.getElementById("playbookRows"),
+      experimentRows: document.getElementById("experimentRows"),
+      ownerRows: document.getElementById("ownerRows"),
       sourceList: document.getElementById("sourceList")
     };
 
@@ -705,8 +839,9 @@ def main() -> None:
     function renderKpis() {
       const failedPayments = data.payments.reduce((sum, row) => sum + Number(row.open_failed || 0), 0);
       const skuExposure = data.skuRisk.reduce((sum, row) => sum + Number(row.margin_at_risk || 0), 0);
+      const netImpact = data.playbooks.reduce((sum, row) => sum + Number(row.net_impact || 0), 0);
       els.kpiActions.textContent = number.format(data.actions.length);
-      els.kpiCategories.textContent = number.format(data.leakage.length);
+      els.kpiNetImpact.textContent = money.format(netImpact);
       els.kpiFailedPayments.textContent = number.format(failedPayments);
       els.kpiSkuExposure.textContent = money.format(skuExposure);
     }
@@ -770,6 +905,62 @@ def main() -> None:
         </div>`;
       }).join("");
     }
+    function decisionClass(decision) {
+      if (decision.includes("Scale")) return "scale";
+      if (decision.includes("test")) return "test";
+      return "";
+    }
+    function renderPlaybooks() {
+      const netImpact = data.playbooks.reduce((sum, row) => sum + Number(row.net_impact || 0), 0);
+      const savedValue = data.playbooks.reduce((sum, row) => sum + Number(row.expected_saved_value || 0), 0);
+      const totalCost = data.playbooks.reduce((sum, row) => sum + Number(row.total_cost || 0), 0);
+      const avgRoi = totalCost ? savedValue / totalCost : 0;
+      els.playbookSummary.innerHTML = [
+        ["Recommended playbooks", number.format(data.playbooks.length)],
+        ["Expected saved value", money.format(savedValue)],
+        ["Net impact", money.format(netImpact)],
+        ["Blended ROI", `${avgRoi.toFixed(1)}x`]
+      ].map(([label, value]) => `
+        <div class="metric-tile"><span>${label}</span><strong>${value}</strong></div>
+      `).join("");
+
+      els.playbookRows.innerHTML = data.playbooks.map(row => `
+        <tr>
+          <td data-label="Playbook"><strong>${row.playbook}</strong><br><span class="muted">${row.primary_metric} / ${row.speed_to_value}</span></td>
+          <td data-label="Owner"><span class="owner-pill">${row.owner}</span></td>
+          <td data-label="Eligible">${number.format(row.eligible_customers)}</td>
+          <td data-label="Net Impact">${money.format(row.net_impact)}</td>
+          <td data-label="ROI">${Number(row.roi).toFixed(1)}x</td>
+          <td data-label="Decision"><span class="decision-pill ${decisionClass(row.decision)}">${row.decision}</span></td>
+        </tr>
+      `).join("");
+    }
+    function renderExperiments() {
+      els.experimentRows.innerHTML = data.experiments.map(row => `
+        <article class="experiment-card">
+          <strong>${row.experiment_id}: ${row.playbook}</strong>
+          <p>${row.hypothesis}</p>
+          <div class="experiment-meta">
+            <span>${row.owner}</span>
+            <span>${number.format(row.treatment_count)} treatment</span>
+            <span>${number.format(row.control_count)} control</span>
+            <span>${row.duration_days} days</span>
+            <span>${percent.format(row.minimum_detectable_lift)} lift</span>
+          </div>
+          <p>${row.decision_rule}</p>
+        </article>
+      `).join("");
+    }
+    function renderOwnerWorkload() {
+      els.ownerRows.innerHTML = data.ownerWorkload.map(row => `
+        <tr>
+          <td data-label="Owner"><span class="owner-pill">${row.owner}</span></td>
+          <td data-label="Customers">${number.format(row.eligible_customers)}</td>
+          <td data-label="Net Impact">${money.format(row.expected_net_impact)}</td>
+          <td data-label="Best Next">${row.best_next_playbook}</td>
+        </tr>
+      `).join("");
+    }
     function renderPayments() {
       const max = Math.max(...data.payments.map(row => row.open_amount), 1);
       els.paymentRows.innerHTML = data.payments.map(row => {
@@ -800,6 +991,9 @@ def main() -> None:
     renderLeakage();
     renderControls();
     renderActionQueue();
+    renderPlaybooks();
+    renderExperiments();
+    renderOwnerWorkload();
     renderPayments();
     renderSkuRisk();
     renderSources();

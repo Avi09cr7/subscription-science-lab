@@ -1,0 +1,5 @@
+rank,issue_type,playbook,owner,eligible_customers,gross_value,avg_customer_value,cost_per_action,total_cost,expected_save_rate,expected_saved_value,net_impact,roi,speed_to_value,primary_metric,brands,decision
+1,late_fulfillment,Late-shipment rescue workflow,Operations,42,5920.65,140.97,9.0,378.0,0.24,1420.96,1042.96,3.76,7-21 days,Next renewal retained,"Northstar Apparel, VitalEdge Wellness, Voltix Home",Scale this week
+2,failed_payment,Smart dunning and payment-link recovery,Billing Ops,18,2510.09,139.45,1.25,22.5,0.42,1054.24,1031.74,46.86,0-7 days,Recovered invoice rate,"VitalEdge Wellness, Voltix Home",Scale this week
+3,support_escalation,Priority callback for high-value subscribers,Customer Success,30,5297.3,176.58,14.0,420.0,0.2,1059.46,639.46,2.52,7-14 days,Escalation retention rate,"Northstar Apparel, VitalEdge Wellness, Voltix Home",Run controlled test
+4,discount_margin_leak,Offer ladder instead of blanket discounts,Growth,29,3626.1,125.04,3.5,101.5,0.16,580.18,478.68,5.72,14-30 days,Gross margin retained,"Northstar Apparel, VitalEdge Wellness, Voltix Home",Run controlled test
