@@ -19,5 +19,8 @@
   },
   "rows_processed": 2600,
   "overall_churn_rate": 0.2096,
-  "total_monthly_revenue": 187765.01
+  "total_monthly_revenue": 187765.01,
+  "total_revenue_at_risk": 167961.3,
+  "action_queue_items": 75,
+  "leakage_categories": 6
 }

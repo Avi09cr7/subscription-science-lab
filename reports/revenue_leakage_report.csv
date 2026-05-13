@@ -1,0 +1,7 @@
+rank,leak_area,problem,affected_count,revenue_at_risk,recommended_action,owner,urgency
+1,Campaign quality leakage,Some acquisition channels are producing weak payback or high-risk subscribers.,14,90902.33,Pause or cap poor-payback channels and reallocate budget to higher-retention sources.,Marketing,Next budget cycle
+2,Fulfillment-driven churn,Late shipments are hitting customers who already have elevated churn probability.,651,30288.88,Escalate late orders for high-margin subscribers before renewal windows.,Operations,This week
+3,SKU stockout exposure,Forecasted demand exceeds available units for subscription SKUs.,8,25117.69,Advance purchase orders for high-margin SKUs with supplier lead-time risk.,Inventory,This week
+4,Support escalation risk,Subscribers with repeated support issues have high predicted cancellation risk.,57,7655.8,Create a callback queue for high-value subscribers with repeated tickets.,Customer Success,Today
+5,Discount margin leakage,High discounts are concentrated among customers with weak retention signals.,143,7370.08,Replace blanket discounts with targeted win-back or plan-change offers.,Growth,This week
+6,Failed payment recovery,Open failed subscription invoices are creating preventable involuntary churn risk.,85,6626.52,Prioritize payment update links and retry timing for highest-value failed invoices.,Billing Ops,Today

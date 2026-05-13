@@ -1,0 +1,38 @@
+{
+  "total_revenue_at_risk": 167961.3,
+  "top_leak_area": "Campaign quality leakage",
+  "top_recommended_action": "Pause or cap poor-payback channels and reallocate budget to higher-retention sources.",
+  "today_actions": 2,
+  "leakage_items": [
+    {
+      "rank": 1,
+      "leak_area": "Campaign quality leakage",
+      "problem": "Some acquisition channels are producing weak payback or high-risk subscribers.",
+      "affected_count": 14,
+      "revenue_at_risk": 90902.33,
+      "recommended_action": "Pause or cap poor-payback channels and reallocate budget to higher-retention sources.",
+      "owner": "Marketing",
+      "urgency": "Next budget cycle"
+    },
+    {
+      "rank": 2,
+      "leak_area": "Fulfillment-driven churn",
+      "problem": "Late shipments are hitting customers who already have elevated churn probability.",
+      "affected_count": 651,
+      "revenue_at_risk": 30288.88,
+      "recommended_action": "Escalate late orders for high-margin subscribers before renewal windows.",
+      "owner": "Operations",
+      "urgency": "This week"
+    },
+    {
+      "rank": 3,
+      "leak_area": "SKU stockout exposure",
+      "problem": "Forecasted demand exceeds available units for subscription SKUs.",
+      "affected_count": 8,
+      "revenue_at_risk": 25117.69,
+      "recommended_action": "Advance purchase orders for high-margin SKUs with supplier lead-time risk.",
+      "owner": "Inventory",
+      "urgency": "This week"
+    }
+  ]
+}

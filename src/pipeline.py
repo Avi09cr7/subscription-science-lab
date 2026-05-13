@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from leakage import build_leakage_outputs
 from model import classification_metrics, predict_proba, train_logistic_regression
 
 
@@ -167,11 +168,22 @@ def main() -> None:
     customers = pd.read_csv(RAW_DIR / "customers.csv")
     monthly = pd.read_csv(RAW_DIR / "monthly_revenue.csv")
     campaigns = pd.read_csv(RAW_DIR / "campaigns.csv")
+    payment_events = pd.read_csv(RAW_DIR / "payment_events.csv")
+    fulfillment_events = pd.read_csv(RAW_DIR / "fulfillment_events.csv")
+    sku_inventory = pd.read_csv(RAW_DIR / "sku_inventory.csv")
 
     validation_checks = validate_customers(customers)
     scored_customers, metrics, coefficients = train_churn_model(customers)
     brand_summary, channel_summary = build_summaries(scored_customers, campaigns)
     revenue_forecast = forecast_revenue(monthly)
+    leakage_report, action_queue, action_brief = build_leakage_outputs(
+        scored_customers,
+        campaigns,
+        payment_events,
+        fulfillment_events,
+        sku_inventory,
+        REPORTS_DIR,
+    )
 
     scored_customers.to_csv(PROCESSED_DIR / "customers_scored.csv", index=False)
     scored_customers.sort_values("churn_risk_score", ascending=False).head(100).to_csv(
@@ -188,6 +200,9 @@ def main() -> None:
         "rows_processed": int(len(customers)),
         "overall_churn_rate": round(float(customers["churned"].mean()), 4),
         "total_monthly_revenue": round(float(customers["monthly_revenue"].sum()), 2),
+        "total_revenue_at_risk": action_brief["total_revenue_at_risk"],
+        "action_queue_items": int(len(action_queue)),
+        "leakage_categories": int(len(leakage_report)),
     }
     (REPORTS_DIR / "model_metrics.json").write_text(json.dumps(metrics_payload, indent=2), encoding="utf-8")
     print("Pipeline complete. Reports written to reports/.")

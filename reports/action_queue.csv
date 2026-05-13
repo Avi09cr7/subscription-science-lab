@@ -1,0 +1,76 @@
+customer_id,brand,issue_type,expected_value,recommended_action,reason
+CUST-00247,Voltix Home,late_fulfillment + support_escalation,714.5,Prioritize shipment follow-up before next renewal.,Delivered in 6 days vs 3 promised | 3 support tickets in 90 days
+CUST-02437,Voltix Home,support_escalation + failed_payment,471.76,Add to customer-success callback queue.,3 support tickets in 90 days | 3 retries / 2 days past due
+CUST-01246,Voltix Home,support_escalation + late_fulfillment,422.18,Add to customer-success callback queue.,3 support tickets in 90 days | Delivered in 5 days vs 3 promised
+CUST-02313,Voltix Home,support_escalation + late_fulfillment,388.28,Add to customer-success callback queue.,3 support tickets in 90 days | Delivered in 4 days vs 2 promised
+CUST-01840,Voltix Home,late_fulfillment + discount_margin_leak,384.84,Prioritize shipment follow-up before next renewal.,Delivered in 6 days vs 3 promised | 55% discount with 54% churn risk
+CUST-02239,Voltix Home,late_fulfillment + discount_margin_leak,384.55,Prioritize shipment follow-up before next renewal.,Delivered in 5 days vs 2 promised | 44% discount with 63% churn risk
+CUST-01103,Voltix Home,late_fulfillment + failed_payment,375.05,Prioritize shipment follow-up before next renewal.,Delivered in 7 days vs 5 promised | 2 retries / 5 days past due
+CUST-00600,Voltix Home,late_fulfillment + discount_margin_leak,364.38,Prioritize shipment follow-up before next renewal.,Delivered in 9 days vs 5 promised | 50% discount with 52% churn risk
+CUST-01877,Voltix Home,support_escalation,358.68,Add to customer-success callback queue.,3 support tickets in 90 days
+CUST-00042,VitalEdge Wellness,late_fulfillment + support_escalation + discount_margin_leak,344.65,Prioritize shipment follow-up before next renewal.,Delivered in 5 days vs 3 promised | 3 support tickets in 90 days
+CUST-01959,Voltix Home,support_escalation + discount_margin_leak,341.85,Add to customer-success callback queue.,5 support tickets in 90 days | 36% discount with 69% churn risk
+CUST-02176,Voltix Home,late_fulfillment + discount_margin_leak,309.9,Prioritize shipment follow-up before next renewal.,Delivered in 4 days vs 2 promised | 46% discount with 47% churn risk
+CUST-00283,Voltix Home,failed_payment + late_fulfillment,302.83,Send payment update link; decline reason: gateway_issue.,1 retries / 4 days past due | Delivered in 7 days vs 5 promised
+CUST-00114,Voltix Home,failed_payment + late_fulfillment,299.17,Send payment update link; decline reason: insufficient_funds.,3 retries / 11 days past due | Delivered in 4 days vs 2 promised
+CUST-02259,Voltix Home,support_escalation + discount_margin_leak,293.66,Add to customer-success callback queue.,3 support tickets in 90 days | 41% discount with 47% churn risk
+CUST-00953,Voltix Home,late_fulfillment + discount_margin_leak,291.19,Prioritize shipment follow-up before next renewal.,Delivered in 7 days vs 3 promised | 51% discount with 55% churn risk
+CUST-01583,Voltix Home,support_escalation + discount_margin_leak,287.91,Add to customer-success callback queue.,3 support tickets in 90 days | 43% discount with 51% churn risk
+CUST-02005,Voltix Home,support_escalation + discount_margin_leak,287.9,Add to customer-success callback queue.,3 support tickets in 90 days | 38% discount with 38% churn risk
+CUST-01370,Voltix Home,support_escalation + discount_margin_leak,273.87,Add to customer-success callback queue.,4 support tickets in 90 days | 36% discount with 51% churn risk
+CUST-01948,VitalEdge Wellness,support_escalation + discount_margin_leak,270.22,Add to customer-success callback queue.,5 support tickets in 90 days | 50% discount with 67% churn risk
+CUST-01112,Voltix Home,support_escalation + late_fulfillment,268.64,Add to customer-success callback queue.,3 support tickets in 90 days | Delivered in 6 days vs 3 promised
+CUST-01673,Voltix Home,support_escalation,252.83,Add to customer-success callback queue.,4 support tickets in 90 days
+CUST-01935,Voltix Home,failed_payment + late_fulfillment,252.23,Send payment update link; decline reason: gateway_issue.,1 retries / 6 days past due | Delivered in 6 days vs 4 promised
+CUST-01408,Voltix Home,failed_payment + late_fulfillment,247.99,Send payment update link; decline reason: expired_card.,3 retries / 9 days past due | Delivered in 6 days vs 4 promised
+CUST-00843,Voltix Home,support_escalation,246.64,Add to customer-success callback queue.,5 support tickets in 90 days
+CUST-02486,Voltix Home,late_fulfillment + failed_payment,244.93,Prioritize shipment follow-up before next renewal.,Delivered in 10 days vs 4 promised | 3 retries / 12 days past due
+CUST-00239,Voltix Home,failed_payment + discount_margin_leak,235.43,Send payment update link; decline reason: gateway_issue.,1 retries / 5 days past due | 46% discount with 57% churn risk
+CUST-01436,Voltix Home,late_fulfillment,232.37,Prioritize shipment follow-up before next renewal.,Delivered in 7 days vs 2 promised
+CUST-01369,Voltix Home,support_escalation,228.06,Add to customer-success callback queue.,3 support tickets in 90 days
+CUST-01478,Voltix Home,support_escalation,223.85,Add to customer-success callback queue.,3 support tickets in 90 days
+CUST-00344,Voltix Home,late_fulfillment + discount_margin_leak,222.83,Prioritize shipment follow-up before next renewal.,Delivered in 6 days vs 4 promised | 39% discount with 39% churn risk
+CUST-00500,Voltix Home,failed_payment + discount_margin_leak,222.5,Send payment update link; decline reason: soft_decline.,2 retries / 15 days past due | 37% discount with 37% churn risk
+CUST-01818,Voltix Home,failed_payment,217.95,Send payment update link; decline reason: authentication_required.,1 retries / 17 days past due
+CUST-01272,Voltix Home,late_fulfillment + failed_payment,217.71,Prioritize shipment follow-up before next renewal.,Delivered in 5 days vs 3 promised | 3 retries / 15 days past due
+CUST-01415,Voltix Home,support_escalation + discount_margin_leak,216.42,Add to customer-success callback queue.,3 support tickets in 90 days | 44% discount with 50% churn risk
+CUST-01347,Voltix Home,support_escalation,212.16,Add to customer-success callback queue.,3 support tickets in 90 days
+CUST-01177,Voltix Home,late_fulfillment + discount_margin_leak,211.87,Prioritize shipment follow-up before next renewal.,Delivered in 6 days vs 4 promised | 49% discount with 32% churn risk
+CUST-01334,Voltix Home,support_escalation,204.31,Add to customer-success callback queue.,6 support tickets in 90 days
+CUST-01680,Voltix Home,failed_payment + discount_margin_leak,203.58,Send payment update link; decline reason: soft_decline.,3 retries / 6 days past due | 50% discount with 54% churn risk
+CUST-00463,Voltix Home,failed_payment,193.78,Send payment update link; decline reason: insufficient_funds.,3 retries / 4 days past due
+CUST-00235,Voltix Home,support_escalation,192.55,Add to customer-success callback queue.,3 support tickets in 90 days
+CUST-01259,Voltix Home,late_fulfillment + failed_payment,183.54,Prioritize shipment follow-up before next renewal.,Delivered in 7 days vs 4 promised | 3 retries / 15 days past due
+CUST-02534,Voltix Home,support_escalation + discount_margin_leak,183.23,Add to customer-success callback queue.,3 support tickets in 90 days | 40% discount with 46% churn risk
+CUST-01616,Northstar Apparel,support_escalation + late_fulfillment,178.02,Add to customer-success callback queue.,3 support tickets in 90 days | Delivered in 5 days vs 3 promised
+CUST-01781,Northstar Apparel,late_fulfillment + discount_margin_leak,177.86,Prioritize shipment follow-up before next renewal.,Delivered in 5 days vs 3 promised | 46% discount with 49% churn risk
+CUST-01870,Voltix Home,support_escalation,177.11,Add to customer-success callback queue.,3 support tickets in 90 days
+CUST-00480,Voltix Home,late_fulfillment + discount_margin_leak,172.7,Prioritize shipment follow-up before next renewal.,Delivered in 8 days vs 5 promised | 42% discount with 32% churn risk
+CUST-02166,VitalEdge Wellness,failed_payment + late_fulfillment,172.34,Send payment update link; decline reason: insufficient_funds.,3 retries / 7 days past due | Delivered in 5 days vs 3 promised
+CUST-00439,Voltix Home,late_fulfillment,172.19,Prioritize shipment follow-up before next renewal.,Delivered in 5 days vs 3 promised
+CUST-00756,Northstar Apparel,late_fulfillment + discount_margin_leak,171.34,Prioritize shipment follow-up before next renewal.,Delivered in 9 days vs 5 promised | 46% discount with 42% churn risk
+CUST-00282,Voltix Home,late_fulfillment,170.03,Prioritize shipment follow-up before next renewal.,Delivered in 4 days vs 2 promised
+CUST-00945,Voltix Home,late_fulfillment + discount_margin_leak,169.75,Prioritize shipment follow-up before next renewal.,Delivered in 5 days vs 2 promised | 36% discount with 32% churn risk
+CUST-02194,Voltix Home,late_fulfillment,169.3,Prioritize shipment follow-up before next renewal.,Delivered in 6 days vs 2 promised
+CUST-00097,Voltix Home,support_escalation,168.87,Add to customer-success callback queue.,4 support tickets in 90 days
+CUST-01015,Northstar Apparel,support_escalation + discount_margin_leak,168.19,Add to customer-success callback queue.,3 support tickets in 90 days | 55% discount with 61% churn risk
+CUST-01949,Voltix Home,late_fulfillment,166.18,Prioritize shipment follow-up before next renewal.,Delivered in 7 days vs 5 promised
+CUST-00436,VitalEdge Wellness,failed_payment + late_fulfillment,165.78,Send payment update link; decline reason: authentication_required.,1 retries / 6 days past due | Delivered in 7 days vs 4 promised
+CUST-01041,Voltix Home,late_fulfillment,163.17,Prioritize shipment follow-up before next renewal.,Delivered in 6 days vs 4 promised
+CUST-00137,Voltix Home,discount_margin_leak,162.31,Move from blanket discount to targeted retention offer.,41% discount with 55% churn risk
+CUST-00033,Voltix Home,support_escalation,161.72,Add to customer-success callback queue.,4 support tickets in 90 days
+CUST-01651,VitalEdge Wellness,support_escalation + late_fulfillment,161.4,Add to customer-success callback queue.,3 support tickets in 90 days | Delivered in 6 days vs 3 promised
+CUST-00615,Voltix Home,failed_payment,155.0,Send payment update link; decline reason: expired_card.,1 retries / 9 days past due
+CUST-01286,Voltix Home,late_fulfillment,147.97,Prioritize shipment follow-up before next renewal.,Delivered in 6 days vs 4 promised
+CUST-02400,Voltix Home,support_escalation,147.47,Add to customer-success callback queue.,4 support tickets in 90 days
+CUST-00310,Voltix Home,late_fulfillment,146.97,Prioritize shipment follow-up before next renewal.,Delivered in 5 days vs 3 promised
+CUST-02517,Voltix Home,failed_payment,145.94,Send payment update link; decline reason: expired_card.,3 retries / 9 days past due
+CUST-02267,Voltix Home,support_escalation,144.15,Add to customer-success callback queue.,5 support tickets in 90 days
+CUST-00553,Voltix Home,late_fulfillment,144.03,Prioritize shipment follow-up before next renewal.,Delivered in 4 days vs 2 promised
+CUST-01922,Northstar Apparel,late_fulfillment + discount_margin_leak,144.02,Prioritize shipment follow-up before next renewal.,Delivered in 6 days vs 3 promised | 55% discount with 49% churn risk
+CUST-01101,Voltix Home,late_fulfillment,142.39,Prioritize shipment follow-up before next renewal.,Delivered in 5 days vs 3 promised
+CUST-02553,VitalEdge Wellness,late_fulfillment + discount_margin_leak,142.38,Prioritize shipment follow-up before next renewal.,Delivered in 7 days vs 2 promised | 36% discount with 43% churn risk
+CUST-01130,Voltix Home,discount_margin_leak,141.74,Move from blanket discount to targeted retention offer.,41% discount with 44% churn risk
+CUST-00064,Voltix Home,discount_margin_leak,140.98,Move from blanket discount to targeted retention offer.,55% discount with 33% churn risk
+CUST-00407,Northstar Apparel,late_fulfillment,140.95,Prioritize shipment follow-up before next renewal.,Delivered in 6 days vs 4 promised
+CUST-01399,Voltix Home,late_fulfillment,139.12,Prioritize shipment follow-up before next renewal.,Delivered in 7 days vs 5 promised

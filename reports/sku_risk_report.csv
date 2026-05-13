@@ -1,0 +1,13 @@
+sku,brand,category,on_hand_units,forecast_30d_units,unit_price,gross_margin_rate,supplier_lead_time_days,stockout_units,stockout_risk,margin_at_risk
+NA-TEE-01,Northstar Apparel,apparel,192,444,45.83,0.621,9,252,0.5675675675675675,7172.02836
+DL-CLEANSER-03,DermaCo Labs,beauty,168,404,44.38,0.572,10,236,0.5841584158415841,5990.94496
+DL-SERUM-01,DermaCo Labs,beauty,245,500,44.31,0.34,8,255,0.51,3841.6770000000006
+VW-BUNDLE-03,VitalEdge Wellness,wellness,140,253,57.57,0.585,13,113,0.44664031620553357,3805.6648499999997
+DL-CREAM-02,DermaCo Labs,beauty,52,156,45.0,0.469,12,104,0.6666666666666666,2194.92
+VH-BATTERY-02,Voltix Home,home_care,496,506,119.52,0.627,27,10,0.019762845849802372,749.3904
+VH-FILTER-01,Voltix Home,home_care,260,271,159.13,0.415,15,11,0.04059040590405904,726.4284499999999
+VW-PROTEIN-02,VitalEdge Wellness,wellness,415,429,79.5,0.572,23,14,0.03263403263403263,636.636
+NA-JACKET-03,Northstar Apparel,apparel,329,255,47.98,0.351,10,0,0.0,0.0
+NA-DENIM-02,Northstar Apparel,apparel,586,421,35.34,0.578,24,0,0.0,0.0
+VH-CLEAN-03,Voltix Home,home_care,181,160,96.42,0.594,16,0,0.0,0.0
+VW-CAPSULE-01,VitalEdge Wellness,wellness,151,125,82.11,0.403,21,0,0.0,0.0

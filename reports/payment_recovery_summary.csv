@@ -1,0 +1,6 @@
+decline_reason,failed_invoices,total_failed_amount,open_failed,open_amount
+soft_decline,32,2555.34,24,1857.39
+gateway_issue,23,2093.1,13,1322.32
+authentication_required,31,2283.78,18,1245.32
+expired_card,33,2440.76,15,1122.87
+insufficient_funds,31,2092.9,15,1078.62
