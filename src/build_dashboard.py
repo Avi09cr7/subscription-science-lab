@@ -9,61 +9,55 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 REPORTS_DIR = ROOT / "reports"
 RAW_DIR = ROOT / "data" / "raw"
-PROCESSED_DIR = ROOT / "data" / "processed"
 
 
-def money(value: float) -> str:
-    return f"${value:,.0f}"
+ISSUE_META = {
+    "failed_payment": {"owner": "Billing Ops", "urgency": "Today", "label": "Failed payment"},
+    "late_fulfillment": {"owner": "Operations", "urgency": "This week", "label": "Late fulfillment"},
+    "discount_margin_leak": {"owner": "Growth", "urgency": "This week", "label": "Discount leakage"},
+    "support_escalation": {"owner": "Customer Success", "urgency": "Today", "label": "Support escalation"},
+}
 
 
-def pct(value: float) -> str:
-    return f"{value * 100:.1f}%"
-
-
-def records_json(frame: pd.DataFrame) -> str:
-    return json.dumps(frame.to_dict(orient="records"), ensure_ascii=False)
+def enrich_actions(actions: pd.DataFrame) -> pd.DataFrame:
+    if actions.empty:
+        return actions
+    enriched = actions.copy()
+    enriched["primary_issue"] = enriched["issue_type"].str.split(" + ", regex=False).str[0]
+    enriched["owner"] = enriched["primary_issue"].map(lambda item: ISSUE_META.get(item, {}).get("owner", "Ops"))
+    enriched["urgency"] = enriched["primary_issue"].map(lambda item: ISSUE_META.get(item, {}).get("urgency", "This week"))
+    enriched["issue_label"] = enriched["primary_issue"].map(lambda item: ISSUE_META.get(item, {}).get("label", item))
+    return enriched
 
 
 def main() -> None:
     metrics = json.loads((REPORTS_DIR / "model_metrics.json").read_text(encoding="utf-8"))
-    brand_summary = pd.read_csv(REPORTS_DIR / "brand_summary.csv")
-    channel_summary = pd.read_csv(REPORTS_DIR / "channel_summary.csv")
-    forecast = pd.read_csv(REPORTS_DIR / "revenue_forecast.csv")
-    drivers = pd.read_csv(REPORTS_DIR / "top_model_drivers.csv")
-    customers = pd.read_csv(PROCESSED_DIR / "customers_scored.csv")
-
-    risk_columns = [
-        "customer_id",
-        "brand",
-        "region",
-        "plan",
-        "monthly_revenue",
-        "churn_risk_score",
-        "risk_segment",
-        "support_tickets_90d",
-        "discount_rate",
-    ]
-    risk_customers = customers.sort_values("churn_risk_score", ascending=False)[risk_columns].copy()
+    brief = json.loads((REPORTS_DIR / "weekly_action_brief.json").read_text(encoding="utf-8"))
+    leakage = pd.read_csv(REPORTS_DIR / "revenue_leakage_report.csv")
+    actions = enrich_actions(pd.read_csv(REPORTS_DIR / "action_queue.csv"))
+    payments = pd.read_csv(REPORTS_DIR / "payment_recovery_summary.csv")
+    sku_risk = pd.read_csv(REPORTS_DIR / "sku_risk_report.csv")
     raw_files = sorted(path.name for path in RAW_DIR.glob("*.csv"))
 
-    dashboard_payload = {
+    payload = {
         "metrics": metrics,
-        "brands": brand_summary.to_dict(orient="records"),
-        "channels": channel_summary.to_dict(orient="records"),
-        "forecast": forecast.to_dict(orient="records"),
-        "drivers": drivers.to_dict(orient="records"),
-        "customers": risk_customers.head(500).to_dict(orient="records"),
+        "brief": brief,
+        "leakage": leakage.to_dict(orient="records"),
+        "actions": actions.to_dict(orient="records"),
+        "payments": payments.to_dict(orient="records"),
+        "skuRisk": sku_risk.to_dict(orient="records"),
         "rawFiles": raw_files,
+        "issueMeta": ISSUE_META,
     }
 
-    html_doc = f"""<!doctype html>
+    html_doc = """<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Subscription Science Lab</title>
+  <title>Subscription Revenue Recovery Control Tower</title>
   <style>
-    :root {{
+    :root {
       --primary: #faff69;
       --primary-active: #e6eb52;
       --ink: #ffffff;
@@ -81,22 +75,21 @@ def main() -> None:
       --warning: #f59e0b;
       --error: #ef4444;
       --blue: #3b82f6;
-    }}
-    * {{ box-sizing: border-box; }}
-    html {{ scroll-behavior: smooth; }}
-    body {{
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
       margin: 0;
       color: var(--ink);
       background: var(--canvas);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }}
-    button, input {{ font: inherit; }}
-    a {{ color: inherit; }}
-    .shell {{
+    }
+    button { font: inherit; }
+    .shell {
       width: min(1320px, calc(100vw - 48px));
       margin: 0 auto;
-    }}
-    nav {{
+    }
+    nav {
       position: sticky;
       top: 0;
       z-index: 20;
@@ -105,33 +98,37 @@ def main() -> None:
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--hairline);
-      background: rgba(10, 10, 10, .92);
+      background: rgba(10, 10, 10, .94);
       color: var(--body);
       font-size: 14px;
       backdrop-filter: blur(14px);
-    }}
-    .brand {{
+    }
+    .brand {
       display: flex;
       gap: 10px;
       align-items: center;
       color: var(--ink);
       font-weight: 700;
-    }}
-    .mark {{
+    }
+    .mark {
       width: 24px;
       height: 24px;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 2px;
-    }}
-    .mark span {{ background: var(--primary); border-radius: 2px; }}
-    .nav-links {{
+    }
+    .mark span { background: var(--primary); border-radius: 2px; }
+    .nav-links {
       display: flex;
       gap: 20px;
       align-items: center;
       color: var(--muted);
-    }}
-    .button {{
+    }
+    .nav-links a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .button {
       min-height: 40px;
       display: inline-flex;
       align-items: center;
@@ -142,26 +139,19 @@ def main() -> None:
       background: var(--primary);
       color: #0a0a0a;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 700;
       text-decoration: none;
       cursor: pointer;
-    }}
-    .button.secondary {{
-      background: var(--surface-card);
-      color: var(--ink);
-      border: 1px solid var(--hairline-strong);
-    }}
-    header {{
+    }
+    header {
       display: grid;
-      grid-template-columns: minmax(0, .92fr) minmax(420px, 1.08fr);
-      gap: 48px;
-      align-items: center;
-      padding: 78px 0 56px;
-    }}
-    .eyebrow {{
+      grid-template-columns: minmax(0, .95fr) minmax(420px, 1.05fr);
+      gap: 32px;
+      align-items: stretch;
+      padding: 72px 0 42px;
+    }
+    .eyebrow {
       display: inline-flex;
-      align-items: center;
-      gap: 8px;
       width: fit-content;
       padding: 5px 12px;
       border-radius: 9999px;
@@ -169,138 +159,69 @@ def main() -> None:
       color: var(--primary);
       border: 1px solid var(--hairline);
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: 0;
       text-transform: uppercase;
-    }}
-    h1 {{
-      margin: 22px 0 22px;
-      max-width: 800px;
-      font-size: clamp(42px, 6.3vw, 76px);
+    }
+    h1 {
+      margin: 22px 0;
+      max-width: 820px;
+      font-size: clamp(40px, 5.8vw, 72px);
       line-height: 1.03;
       font-weight: 700;
       letter-spacing: 0;
-    }}
-    .lead {{
+    }
+    .lead {
       max-width: 760px;
       color: var(--body);
       font-size: 18px;
       line-height: 1.55;
       margin: 0;
-    }}
-    .hero-actions {{
+    }
+    .hero-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      margin-top: 30px;
-    }}
-    .scene-panel {{
-      min-height: 520px;
-      position: relative;
-      overflow: hidden;
+      margin-top: 28px;
+    }
+    .button.secondary {
       background: var(--surface-card);
-      border: 1px solid var(--hairline);
-      border-radius: 12px;
-    }}
-    #riskScene {{
-      display: block;
-      width: 100%;
-      height: 520px;
-    }}
-    .scene-overlay {{
-      position: absolute;
-      left: 20px;
-      right: 20px;
-      bottom: 20px;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      pointer-events: none;
-    }}
-    .scene-chip {{
+      color: var(--ink);
       border: 1px solid var(--hairline-strong);
-      border-radius: 8px;
-      background: rgba(10, 10, 10, .76);
-      padding: 14px;
-    }}
-    .scene-chip span {{
-      display: block;
-      color: var(--muted);
-      font-size: 12px;
-      margin-bottom: 6px;
-    }}
-    .scene-chip strong {{
-      color: var(--primary);
-      font-size: 22px;
-      line-height: 1;
-    }}
-    main {{ padding: 0 0 80px; }}
-    .stats {{
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 24px;
-      padding: 24px 0 72px;
-    }}
-    .stat {{
-      border-top: 1px solid var(--hairline);
-      padding-top: 20px;
-    }}
-    .stat span {{
-      display: block;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.4;
-      margin-bottom: 12px;
-    }}
-    .stat strong {{
-      color: var(--primary);
-      font-size: clamp(34px, 5vw, 56px);
-      line-height: 1;
-      font-weight: 700;
-      letter-spacing: 0;
-    }}
-    .section-grid {{
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(340px, .74fr);
-      gap: 24px;
-      margin-bottom: 24px;
-    }}
-    .section-grid.equal {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-    section, .panel {{
+    }
+    .brief-panel, section {
       background: var(--surface-card);
       border: 1px solid var(--hairline);
       border-radius: 12px;
       padding: 28px;
       overflow-x: auto;
-    }}
-    section.yellow {{
-      background: var(--primary);
-      color: #0a0a0a;
-      border-color: var(--primary);
-    }}
-    .section-head {{
+    }
+    .brief-panel {
+      display: grid;
+      align-content: space-between;
+      gap: 24px;
+    }
+    .brief-head {
       display: flex;
-      justify-content: space-between;
-      gap: 16px;
       align-items: flex-start;
-      margin-bottom: 24px;
-    }}
-    h2 {{
+      justify-content: space-between;
+      gap: 18px;
+    }
+    h2 {
       margin: 0;
       color: inherit;
       font-size: 24px;
       line-height: 1.3;
       font-weight: 700;
       letter-spacing: 0;
-    }}
-    .section-head p, .muted {{
+    }
+    .muted, .brief-head p, .section-head p {
       margin: 0;
       color: var(--muted);
       font-size: 14px;
       line-height: 1.55;
-    }}
-    .yellow .muted {{ color: #242424; }}
-    .badge {{
+    }
+    .badge {
       display: inline-flex;
       align-items: center;
       border-radius: 9999px;
@@ -308,20 +229,143 @@ def main() -> None:
       background: var(--surface-elevated);
       color: var(--body-strong);
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
       white-space: nowrap;
-    }}
-    .yellow .badge {{
-      background: #0a0a0a;
+    }
+    .hero-metric {
+      border-top: 1px solid var(--hairline);
+      padding-top: 20px;
+    }
+    .hero-metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .hero-metric strong {
       color: var(--primary);
-    }}
-    .control-row {{
+      font-size: clamp(42px, 6vw, 72px);
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+    .brief-list {
+      display: grid;
+      gap: 12px;
+    }
+    .brief-item {
+      display: grid;
+      grid-template-columns: 36px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--hairline-strong);
+      border-radius: 8px;
+    }
+    .rank {
+      width: 28px;
+      height: 28px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 9999px;
+      background: var(--primary);
+      color: #0a0a0a;
+      font-weight: 800;
+      font-size: 13px;
+    }
+    .brief-item strong {
+      display: block;
+      color: var(--ink);
+      line-height: 1.35;
+    }
+    .brief-item span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .brief-item b {
+      color: var(--primary);
+      white-space: nowrap;
+    }
+    main { padding-bottom: 80px; }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 24px;
+      padding: 20px 0 48px;
+    }
+    .kpi {
+      border-top: 1px solid var(--hairline);
+      padding-top: 18px;
+    }
+    .kpi span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .kpi strong {
+      color: var(--primary);
+      font-size: clamp(30px, 4.4vw, 52px);
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 22px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(360px, .9fr);
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .grid.equal {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .leak-stack {
+      display: grid;
+      gap: 12px;
+    }
+    .leak-row {
+      display: grid;
+      grid-template-columns: 38px minmax(220px, 1fr) minmax(180px, .8fr) 120px;
+      gap: 14px;
+      align-items: center;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .leak-row:last-child { border-bottom: 0; }
+    .leak-row strong { display: block; }
+    .leak-row small { color: var(--muted); line-height: 1.45; }
+    .bar-track {
+      height: 10px;
+      background: var(--surface-elevated);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: inherit;
+    }
+    .amount {
+      color: var(--primary);
+      font-weight: 800;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .controls {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 22px;
-    }}
-    .chip-button {{
+      margin-bottom: 18px;
+    }
+    .chip {
       min-height: 36px;
       border: 1px solid var(--hairline-strong);
       border-radius: 9999px;
@@ -330,755 +374,439 @@ def main() -> None:
       padding: 8px 13px;
       font-size: 13px;
       cursor: pointer;
-    }}
-    .chip-button.active {{
+    }
+    .chip.active {
       background: var(--primary);
       color: #0a0a0a;
       border-color: var(--primary);
-      font-weight: 700;
-    }}
-    .metric-row {{
-      display: grid;
-      grid-template-columns: minmax(170px, .85fr) minmax(160px, 1fr) 72px;
-      gap: 18px;
-      align-items: center;
-      padding: 16px 0;
-      border-bottom: 1px solid var(--hairline);
-    }}
-    .metric-row:last-child {{ border-bottom: 0; }}
-    .metric-row strong {{
-      display: block;
-      font-size: 16px;
-      line-height: 1.4;
-    }}
-    .metric-row span {{
-      display: block;
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 13px;
-    }}
-    .metric-row b {{
-      color: var(--primary);
-      font-size: 18px;
-      text-align: right;
-    }}
-    .track {{
-      height: 10px;
-      border-radius: 9999px;
-      background: var(--surface-elevated);
-      overflow: hidden;
-    }}
-    .fill {{
-      height: 100%;
-      border-radius: inherit;
-      background: var(--primary);
-    }}
-    .score-grid {{
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }}
-    .score {{
-      background: var(--surface-elevated);
-      border: 1px solid var(--hairline-strong);
-      border-radius: 8px;
-      padding: 16px;
-    }}
-    .score span {{
-      display: block;
-      color: var(--muted);
-      font-size: 13px;
-      margin-bottom: 8px;
-    }}
-    .score strong {{
-      color: var(--ink);
-      font-size: 28px;
-      line-height: 1;
-    }}
-    .sim-grid {{
-      display: grid;
-      grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
-      gap: 20px;
-    }}
-    .slider-group {{
-      display: grid;
-      gap: 18px;
-    }}
-    label {{
-      display: grid;
-      gap: 10px;
-      color: var(--body);
-      font-size: 14px;
-    }}
-    .label-line {{
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-    }}
-    input[type="range"] {{
-      width: 100%;
-      accent-color: var(--primary);
-    }}
-    .impact-grid {{
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }}
-    .impact {{
-      min-height: 118px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      background: var(--surface-elevated);
-      border: 1px solid var(--hairline-strong);
-      border-radius: 8px;
-      padding: 16px;
-    }}
-    .impact span {{ color: var(--muted); font-size: 13px; }}
-    .impact strong {{
-      color: var(--primary);
-      font-size: clamp(26px, 4vw, 42px);
-      line-height: 1;
-      letter-spacing: 0;
-    }}
-    .viz-bars {{
-      display: grid;
-      gap: 13px;
-    }}
-    .viz-bar {{
-      display: grid;
-      grid-template-columns: 88px 1fr 52px;
-      gap: 12px;
-      align-items: center;
-      color: var(--body);
-      font-size: 14px;
-    }}
-    .forecast-modes {{
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 18px;
-    }}
-    table {{
+      font-weight: 800;
+    }
+    table {
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
       line-height: 1.45;
-    }}
-    th, td {{
+    }
+    th, td {
       padding: 13px 10px;
       border-bottom: 1px solid var(--hairline);
       text-align: left;
       vertical-align: top;
       color: var(--body);
-    }}
-    th {{
+    }
+    th {
       color: var(--muted);
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0;
-    }}
-    th:first-child, td:first-child {{ white-space: nowrap; }}
-    tbody tr:hover td {{ background: var(--surface-soft); }}
-    .driver {{
+    }
+    td:first-child, th:first-child { white-space: nowrap; }
+    tbody tr:hover td { background: var(--surface-soft); }
+    .owner-pill {
+      display: inline-flex;
+      border-radius: 9999px;
+      padding: 4px 10px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--hairline-strong);
+      color: var(--body-strong);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .recovery-grid {
       display: grid;
-      grid-template-columns: minmax(170px, 1fr) 132px 64px;
-      gap: 14px;
+      gap: 13px;
+    }
+    .recovery-row {
+      display: grid;
+      grid-template-columns: 170px 1fr 90px;
+      gap: 12px;
       align-items: center;
-      padding: 13px 0;
-      border-bottom: 1px solid var(--hairline);
+      color: var(--body);
       font-size: 14px;
-    }}
-    .driver:last-child {{ border-bottom: 0; }}
-    .driver code {{
-      color: var(--primary);
-      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 14px;
-      white-space: normal;
-    }}
-    .driver span {{ color: var(--muted); }}
-    .driver strong {{ text-align: right; color: var(--ink); }}
-    .source-list {{
+    }
+    .source-list {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
       padding: 0;
-      margin: 22px 0 0;
+      margin: 0;
       list-style: none;
-    }}
-    .source-list li {{
-      background: rgba(10, 10, 10, .12);
-      border: 1px solid rgba(10, 10, 10, .22);
+    }
+    .source-list li {
+      background: var(--surface-elevated);
+      border: 1px solid var(--hairline-strong);
       border-radius: 8px;
       padding: 12px;
       font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 13px;
-    }}
-    .mini-note {{
-      margin-top: 14px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.5;
-    }}
-    footer {{
+      color: var(--body);
+    }
+    footer {
       border-top: 1px solid var(--hairline);
       padding: 32px 0 48px;
       color: var(--muted);
       font-size: 14px;
       line-height: 1.55;
-    }}
-    @media (max-width: 1060px) {{
-      .shell {{ width: min(100vw - 32px, 1280px); }}
-      header, .section-grid, .section-grid.equal, .sim-grid {{ grid-template-columns: 1fr; }}
-      .stats {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-      .nav-links {{ display: none; }}
-    }}
-    @media (max-width: 680px) {{
-      header {{ padding: 52px 0 40px; }}
-      #riskScene {{ height: 420px; }}
-      .scene-panel {{ min-height: 420px; }}
-      .scene-overlay, .stats, .score-grid, .source-list, .impact-grid {{ grid-template-columns: 1fr; }}
-      section, .panel {{ padding: 20px; }}
-      .metric-row, .driver, .viz-bar {{ grid-template-columns: 1fr; }}
-      .metric-row b, .driver strong {{ text-align: left; }}
-      th, td {{ padding: 11px 8px; }}
-    }}
+    }
+    @media (max-width: 1060px) {
+      .shell { width: min(100vw - 32px, 1280px); }
+      header, .grid, .grid.equal { grid-template-columns: 1fr; }
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .nav-links { display: none; }
+      .leak-row { grid-template-columns: 38px minmax(0, 1fr); }
+      .leak-row .amount { text-align: left; }
+    }
+    @media (max-width: 680px) {
+      header { padding: 48px 0 34px; }
+      .kpi-grid, .source-list { grid-template-columns: 1fr; }
+      section, .brief-panel { padding: 20px; }
+      .brief-item, .recovery-row { grid-template-columns: 1fr; }
+      .amount { text-align: left; }
+      table, thead, tbody, tr, th, td {
+        display: block;
+      }
+      thead {
+        display: none;
+      }
+      tbody {
+        display: grid;
+        gap: 12px;
+      }
+      tbody tr {
+        border: 1px solid var(--hairline-strong);
+        border-radius: 8px;
+        background: var(--surface-elevated);
+        padding: 14px;
+      }
+      th, td {
+        border-bottom: 0;
+        padding: 0;
+      }
+      td {
+        display: grid;
+        grid-template-columns: 92px minmax(0, 1fr);
+        gap: 12px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        align-items: start;
+      }
+      td + td {
+        margin-top: 10px;
+      }
+      td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+      td:first-child, th:first-child {
+        white-space: normal;
+      }
+      tbody tr:hover td {
+        background: transparent;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="shell">
-    <nav aria-label="Dashboard">
+    <nav aria-label="Control tower">
       <div class="brand">
         <div class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
-        Subscription Science Lab
+        Revenue Recovery Control Tower
       </div>
-      <div class="nav-links" aria-hidden="true">
-        <span>3D Risk Map</span>
-        <span>Simulator</span>
-        <span>Forecast</span>
-        <span>ROI</span>
+      <div class="nav-links">
+        <a href="#leakage">Leakage</a>
+        <a href="#queue">Action Queue</a>
+        <a href="#payments">Payments</a>
+        <a href="#inventory">Inventory</a>
       </div>
-      <a class="button" href="#simulator">Run Scenario</a>
+      <a class="button" href="#queue">Open Queue</a>
     </nav>
 
     <header>
       <div>
-        <span class="eyebrow">Interactive portfolio analytics</span>
-        <h1>Subscription intelligence with a live retention cockpit.</h1>
-        <p class="lead">Explore synthetic subscription data through a 3D churn-risk map, brand filters, risk-segment drilldowns, a retention action simulator, and scenario-based revenue forecasts.</p>
+        <span class="eyebrow">Monday morning ops brief</span>
+        <h1>Find subscription revenue leaks before they become churn.</h1>
+        <p class="lead">A decision cockpit for e-commerce subscription teams: detect where money is leaking, explain why, assign an owner, and rank the next best recovery actions.</p>
         <div class="hero-actions">
-          <a class="button" href="#simulator">Try the simulator</a>
-          <a class="button secondary" href="#risk">Filter customer risk</a>
+          <a class="button" href="#leakage">Review leakage stack</a>
+          <a class="button secondary" href="#payments">Payment recovery</a>
         </div>
       </div>
-      <div class="scene-panel" aria-label="3D churn risk constellation">
-        <canvas id="riskScene"></canvas>
-        <div class="scene-overlay">
-          <div class="scene-chip"><span>Selected customers</span><strong id="sceneCustomers">0</strong></div>
-          <div class="scene-chip"><span>Critical risk</span><strong id="sceneCritical">0</strong></div>
-          <div class="scene-chip"><span>Avg risk</span><strong id="sceneAvgRisk">0%</strong></div>
+      <aside class="brief-panel" aria-label="Weekly action brief">
+        <div class="brief-head">
+          <div>
+            <h2>This Week's Exposure</h2>
+            <p id="briefTopAction"></p>
+          </div>
+          <span class="badge" id="briefToday"></span>
         </div>
-      </div>
+        <div class="hero-metric">
+          <span>Total revenue at risk</span>
+          <strong id="totalAtRisk"></strong>
+        </div>
+        <div class="brief-list" id="briefList"></div>
+      </aside>
     </header>
 
     <main>
-      <div class="stats" aria-label="Portfolio KPIs">
-        <div class="stat"><span>Rows processed</span><strong>{metrics["rows_processed"]:,}</strong></div>
-        <div class="stat"><span>Total monthly revenue</span><strong>{money(metrics["total_monthly_revenue"])}</strong></div>
-        <div class="stat"><span>Observed churn rate</span><strong>{pct(metrics["overall_churn_rate"])}</strong></div>
-        <div class="stat"><span>Model ROC AUC</span><strong>{metrics["model_metrics"]["roc_auc"]:.2f}</strong></div>
+      <div class="kpi-grid" aria-label="Executive KPIs">
+        <div class="kpi"><span>Action queue</span><strong id="kpiActions"></strong></div>
+        <div class="kpi"><span>Leak categories</span><strong id="kpiCategories"></strong></div>
+        <div class="kpi"><span>Open failed payments</span><strong id="kpiFailedPayments"></strong></div>
+        <div class="kpi"><span>SKU margin exposure</span><strong id="kpiSkuExposure"></strong></div>
       </div>
 
-      <section id="risk">
+      <section id="leakage">
         <div class="section-head">
           <div>
-            <h2>Risk Explorer</h2>
-            <p>Filter the portfolio by fictional brand and churn-risk segment. The 3D scene, distribution, and customer action list update together.</p>
+            <h2>Revenue Leakage Stack</h2>
+            <p>Ranked by estimated financial impact across campaign quality, fulfillment, stockouts, support, discounts, and payments.</p>
           </div>
-          <span class="badge">Live filters</span>
+          <span class="badge">Prioritized</span>
         </div>
-        <div class="control-row" id="brandControls"></div>
-        <div class="control-row" id="segmentControls"></div>
-        <div class="section-grid equal">
-          <div>
-            <div id="brandRiskRows"></div>
-          </div>
-          <div>
-            <div class="section-head">
-              <div>
-                <h2>Risk Distribution</h2>
-                <p>Customer count by current risk filter.</p>
-              </div>
-            </div>
-            <div class="viz-bars" id="riskDistribution"></div>
-          </div>
-        </div>
+        <div class="leak-stack" id="leakageRows"></div>
       </section>
 
-      <div class="section-grid" id="simulator">
+      <div class="grid" id="queue">
         <section>
           <div class="section-head">
             <div>
-              <h2>Retention Action Simulator</h2>
-              <p>Estimate the business impact of targeting the highest-risk customers with an incentive or proactive support play.</p>
+              <h2>Recovery Action Queue</h2>
+              <p>One row per customer, deduplicated across overlapping issues and sorted by expected value.</p>
             </div>
-            <span class="badge">Interactive</span>
+            <span class="badge" id="queueCount"></span>
           </div>
-          <div class="sim-grid">
-            <div class="slider-group">
-              <label>
-                <span class="label-line"><span>Customers targeted</span><strong id="targetCountLabel"></strong></span>
-                <input id="targetCount" type="range" min="25" max="300" step="25" value="100">
-              </label>
-              <label>
-                <span class="label-line"><span>Incentive cost per customer</span><strong id="incentiveLabel"></strong></span>
-                <input id="incentiveCost" type="range" min="5" max="80" step="5" value="25">
-              </label>
-              <label>
-                <span class="label-line"><span>Expected save rate</span><strong id="saveRateLabel"></strong></span>
-                <input id="saveRate" type="range" min="5" max="45" step="5" value="20">
-              </label>
-              <p class="mini-note">Revenue saved is estimated from six months of monthly revenue, churn probability, and expected retention save rate.</p>
-            </div>
-            <div class="impact-grid">
-              <div class="impact"><span>Revenue protected</span><strong id="savedRevenue"></strong></div>
-              <div class="impact"><span>Campaign cost</span><strong id="campaignCost"></strong></div>
-              <div class="impact"><span>Net impact</span><strong id="netImpact"></strong></div>
-              <div class="impact"><span>Break-even save rate</span><strong id="breakEven"></strong></div>
-            </div>
-          </div>
+          <div class="controls" id="ownerControls"></div>
+          <div class="controls" id="urgencyControls"></div>
+          <table>
+            <thead><tr><th>Customer</th><th>Issue</th><th>Owner</th><th>Value</th><th>Action</th></tr></thead>
+            <tbody id="actionRows"></tbody>
+          </table>
         </section>
+
         <section>
           <div class="section-head">
             <div>
-              <h2>Highest Risk Customers</h2>
-              <p>Action list filtered by the current brand and segment selection.</p>
+              <h2>What The Queue Is Telling Us</h2>
+              <p>Operational patterns behind the highest-value recovery work.</p>
             </div>
-            <span class="badge">Top 10</span>
+            <span class="badge">Signal</span>
+          </div>
+          <div class="recovery-grid" id="issueMix"></div>
+        </section>
+      </div>
+
+      <div class="grid equal">
+        <section id="payments">
+          <div class="section-head">
+            <div>
+              <h2>Failed Payment Recovery</h2>
+              <p>Open failed invoices by decline reason, separated from voluntary churn.</p>
+            </div>
+            <span class="badge">Billing Ops</span>
+          </div>
+          <div class="recovery-grid" id="paymentRows"></div>
+        </section>
+
+        <section id="inventory">
+          <div class="section-head">
+            <div>
+              <h2>SKU Stockout Exposure</h2>
+              <p>Forecasted demand shortfalls ranked by margin at risk.</p>
+            </div>
+            <span class="badge">Inventory</span>
           </div>
           <table>
-            <thead><tr><th>Customer</th><th>Brand</th><th>Plan</th><th>Revenue</th><th>Risk</th><th>Segment</th></tr></thead>
-            <tbody id="customerRows"></tbody>
+            <thead><tr><th>SKU</th><th>Brand</th><th>Shortfall</th><th>Risk</th><th>Margin at Risk</th></tr></thead>
+            <tbody id="skuRows"></tbody>
           </table>
         </section>
       </div>
 
-      <div class="section-grid equal">
-        <section>
-          <div class="section-head">
-            <div>
-              <h2>Revenue Forecast</h2>
-              <p>Toggle conservative, expected, and optimistic revenue paths from the existing forecast bounds.</p>
-            </div>
-            <span class="badge">Scenario toggle</span>
+      <section>
+        <div class="section-head">
+          <div>
+            <h2>Data Sources</h2>
+            <p>Generated synthetic feeds used by the control tower pipeline.</p>
           </div>
-          <div class="forecast-modes" id="forecastModes"></div>
-          <div class="viz-bars" id="forecastBars"></div>
-        </section>
-        <section>
-          <div class="section-head">
-            <div>
-              <h2>Top Campaign ROI</h2>
-              <p>Channel performance ranked by attributed revenue after acquisition spend.</p>
-            </div>
-            <span class="badge">Budget view</span>
-          </div>
-          <table>
-            <thead><tr><th>Brand</th><th>Channel</th><th>ROI</th><th>Cost / Conv.</th></tr></thead>
-            <tbody id="channelRows"></tbody>
-          </table>
-        </section>
-      </div>
-
-      <div class="section-grid">
-        <section class="yellow" id="source">
-          <div class="section-head">
-            <div>
-              <h2>Data Source</h2>
-              <p class="muted">This dashboard uses a synthetic, reproducible portfolio dataset generated by <strong>src/generate_data.py</strong>. It is not scraped from real brands and does not contain private customer data.</p>
-            </div>
-            <span class="badge">Synthetic dataset</span>
-          </div>
-          <ul class="source-list" id="sourceList"></ul>
-        </section>
-        <section>
-          <div class="section-head">
-            <div>
-              <h2>Model Drivers</h2>
-              <p>Largest logistic-regression coefficients from the trained churn model.</p>
-            </div>
-            <span class="badge">Explainability</span>
-          </div>
-          <div id="driverRows"></div>
-        </section>
-      </div>
+          <span class="badge">Synthetic</span>
+        </div>
+        <ul class="source-list" id="sourceList"></ul>
+      </section>
     </main>
 
     <footer>
-      Generated by a reproducible Python analytics pipeline. Raw inputs are generated locally, processed through ETL validation, scored with a from-scratch logistic regression model, and rendered into this interactive static dashboard.
+      Built from a reproducible Python pipeline: generated subscription operations data, ETL validation, churn-risk scoring, revenue leakage detection, and a prioritized recovery work queue.
     </footer>
   </div>
 
-  <script id="dashboard-data" type="application/json">{json.dumps(dashboard_payload, ensure_ascii=False)}</script>
-  <script type="module">
-    let THREE = null;
-    try {{
-      THREE = await import("https://unpkg.com/three@0.160.0/build/three.module.js");
-    }} catch (error) {{
-      console.warn("Three.js unavailable; using canvas fallback.", error);
-    }}
-
+  <script id="dashboard-data" type="application/json">__DASHBOARD_DATA__</script>
+  <script>
     const data = JSON.parse(document.getElementById("dashboard-data").textContent);
-    const state = {{ brand: "All", segment: "All", forecastMode: "forecast_revenue" }};
-    const segments = ["All", "low", "watch", "high", "critical"];
-    const modeLabels = {{
-      lower_bound: "Conservative",
-      forecast_revenue: "Expected",
-      upper_bound: "Optimistic"
-    }};
-    const moneyFmt = new Intl.NumberFormat("en-US", {{ style: "currency", currency: "USD", maximumFractionDigits: 0 }});
-    const shortMoneyFmt = new Intl.NumberFormat("en-US", {{ style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1 }});
-    const numberFmt = new Intl.NumberFormat("en-US");
-    const pctFmt = new Intl.NumberFormat("en-US", {{ style: "percent", maximumFractionDigits: 1 }});
+    const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+    const number = new Intl.NumberFormat("en-US");
+    const percent = new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 0 });
+    const state = { owner: "All", urgency: "All" };
 
-    const brandNames = ["All", ...data.brands.map(item => item.brand)];
-    const els = {{
-      brandControls: document.getElementById("brandControls"),
-      segmentControls: document.getElementById("segmentControls"),
-      brandRiskRows: document.getElementById("brandRiskRows"),
-      riskDistribution: document.getElementById("riskDistribution"),
-      customerRows: document.getElementById("customerRows"),
-      channelRows: document.getElementById("channelRows"),
-      forecastModes: document.getElementById("forecastModes"),
-      forecastBars: document.getElementById("forecastBars"),
-      driverRows: document.getElementById("driverRows"),
-      sourceList: document.getElementById("sourceList"),
-      targetCount: document.getElementById("targetCount"),
-      incentiveCost: document.getElementById("incentiveCost"),
-      saveRate: document.getElementById("saveRate"),
-      targetCountLabel: document.getElementById("targetCountLabel"),
-      incentiveLabel: document.getElementById("incentiveLabel"),
-      saveRateLabel: document.getElementById("saveRateLabel"),
-      savedRevenue: document.getElementById("savedRevenue"),
-      campaignCost: document.getElementById("campaignCost"),
-      netImpact: document.getElementById("netImpact"),
-      breakEven: document.getElementById("breakEven"),
-      sceneCustomers: document.getElementById("sceneCustomers"),
-      sceneCritical: document.getElementById("sceneCritical"),
-      sceneAvgRisk: document.getElementById("sceneAvgRisk")
-    }};
+    const els = {
+      totalAtRisk: document.getElementById("totalAtRisk"),
+      briefTopAction: document.getElementById("briefTopAction"),
+      briefToday: document.getElementById("briefToday"),
+      briefList: document.getElementById("briefList"),
+      kpiActions: document.getElementById("kpiActions"),
+      kpiCategories: document.getElementById("kpiCategories"),
+      kpiFailedPayments: document.getElementById("kpiFailedPayments"),
+      kpiSkuExposure: document.getElementById("kpiSkuExposure"),
+      leakageRows: document.getElementById("leakageRows"),
+      ownerControls: document.getElementById("ownerControls"),
+      urgencyControls: document.getElementById("urgencyControls"),
+      actionRows: document.getElementById("actionRows"),
+      queueCount: document.getElementById("queueCount"),
+      issueMix: document.getElementById("issueMix"),
+      paymentRows: document.getElementById("paymentRows"),
+      skuRows: document.getElementById("skuRows"),
+      sourceList: document.getElementById("sourceList")
+    };
 
-    function filteredCustomers() {{
-      return data.customers.filter(customer => {{
-        const brandOk = state.brand === "All" || customer.brand === state.brand;
-        const segmentOk = state.segment === "All" || customer.risk_segment === state.segment;
-        return brandOk && segmentOk;
-      }});
-    }}
-
-    function filteredChannels() {{
-      return data.channels
-        .filter(row => state.brand === "All" || row.brand === state.brand)
-        .sort((a, b) => b.roi - a.roi)
-        .slice(0, 6);
-    }}
-
-    function createButton(label, active, onClick) {{
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = `chip-button ${{active ? "active" : ""}}`;
-      button.textContent = label;
-      button.addEventListener("click", onClick);
-      return button;
-    }}
-
-    function renderControls() {{
-      els.brandControls.replaceChildren(...brandNames.map(brand =>
-        createButton(brand, state.brand === brand, () => {{
-          state.brand = brand;
-          renderAll();
-        }})
-      ));
-      els.segmentControls.replaceChildren(...segments.map(segment =>
-        createButton(segment[0].toUpperCase() + segment.slice(1), state.segment === segment, () => {{
-          state.segment = segment;
-          renderAll();
-        }})
-      ));
-      els.forecastModes.replaceChildren(...Object.entries(modeLabels).map(([mode, label]) =>
-        createButton(label, state.forecastMode === mode, () => {{
-          state.forecastMode = mode;
-          renderForecast();
-        }})
-      ));
-    }}
-
-    function renderBrandRisk() {{
-      const maxRisk = Math.max(...data.brands.map(item => item.avg_risk_score));
-      const rows = data.brands
-        .filter(row => state.brand === "All" || row.brand === state.brand)
-        .map(row => {{
-          const width = Math.max(6, row.avg_risk_score / maxRisk * 100);
-          return `<div class="metric-row">
-            <div><strong>${{row.brand}}</strong><span>${{numberFmt.format(row.customers)}} customers / ${{moneyFmt.format(row.monthly_revenue)}} MRR</span></div>
-            <div class="track" aria-hidden="true"><div class="fill" style="width:${{width.toFixed(1)}}%"></div></div>
-            <b>${{pctFmt.format(row.avg_risk_score)}}</b>
-          </div>`;
-        }}).join("");
-      els.brandRiskRows.innerHTML = rows;
-    }}
-
-    function renderDistribution() {{
-      const customers = filteredCustomers();
-      const counts = Object.fromEntries(segments.filter(item => item !== "All").map(item => [item, 0]));
-      customers.forEach(customer => counts[customer.risk_segment] += 1);
-      const maxCount = Math.max(...Object.values(counts), 1);
-      els.riskDistribution.innerHTML = Object.entries(counts).map(([segment, count]) => {{
-        const width = Math.max(4, count / maxCount * 100);
-        return `<div class="viz-bar">
-          <strong>${{segment}}</strong>
-          <div class="track"><div class="fill" style="width:${{width.toFixed(1)}}%"></div></div>
-          <span>${{count}}</span>
+    function uniq(values) {
+      return ["All", ...Array.from(new Set(values)).filter(Boolean)];
+    }
+    function button(label, active, handler) {
+      const node = document.createElement("button");
+      node.type = "button";
+      node.className = `chip ${active ? "active" : ""}`;
+      node.textContent = label;
+      node.addEventListener("click", handler);
+      return node;
+    }
+    function filteredActions() {
+      return data.actions.filter(row => {
+        const ownerOk = state.owner === "All" || row.owner === state.owner;
+        const urgencyOk = state.urgency === "All" || row.urgency === state.urgency;
+        return ownerOk && urgencyOk;
+      });
+    }
+    function renderBrief() {
+      els.totalAtRisk.textContent = money.format(data.brief.total_revenue_at_risk);
+      els.briefTopAction.textContent = data.brief.top_recommended_action;
+      els.briefToday.textContent = `${data.brief.today_actions} today`;
+      els.briefList.innerHTML = data.brief.leakage_items.map(item => `
+        <div class="brief-item">
+          <span class="rank">${item.rank}</span>
+          <div><strong>${item.leak_area}</strong><span>${item.owner} / ${item.urgency}</span></div>
+          <b>${money.format(item.revenue_at_risk)}</b>
+        </div>
+      `).join("");
+    }
+    function renderKpis() {
+      const failedPayments = data.payments.reduce((sum, row) => sum + Number(row.open_failed || 0), 0);
+      const skuExposure = data.skuRisk.reduce((sum, row) => sum + Number(row.margin_at_risk || 0), 0);
+      els.kpiActions.textContent = number.format(data.actions.length);
+      els.kpiCategories.textContent = number.format(data.leakage.length);
+      els.kpiFailedPayments.textContent = number.format(failedPayments);
+      els.kpiSkuExposure.textContent = money.format(skuExposure);
+    }
+    function renderLeakage() {
+      const max = Math.max(...data.leakage.map(row => row.revenue_at_risk), 1);
+      els.leakageRows.innerHTML = data.leakage.map(row => {
+        const width = Math.max(4, row.revenue_at_risk / max * 100);
+        return `<div class="leak-row">
+          <span class="rank">${row.rank}</span>
+          <div><strong>${row.leak_area}</strong><small>${row.problem}</small></div>
+          <div><div class="bar-track"><div class="bar-fill" style="width:${width.toFixed(1)}%"></div></div><small>${row.affected_count} affected / ${row.owner}</small></div>
+          <div class="amount">${money.format(row.revenue_at_risk)}</div>
         </div>`;
-      }}).join("");
-    }}
-
-    function renderCustomers() {{
-      const rows = filteredCustomers().slice(0, 10).map(customer => `<tr>
-        <td>${{customer.customer_id}}</td>
-        <td>${{customer.brand}}</td>
-        <td>${{customer.plan}}</td>
-        <td>${{moneyFmt.format(customer.monthly_revenue)}}</td>
-        <td>${{customer.churn_risk_score.toFixed(2)}}</td>
-        <td>${{customer.risk_segment}}</td>
-      </tr>`).join("");
-      els.customerRows.innerHTML = rows || `<tr><td colspan="6">No customers match this filter.</td></tr>`;
-    }}
-
-    function renderChannels() {{
-      els.channelRows.innerHTML = filteredChannels().map(row => `<tr>
-        <td>${{row.brand}}</td>
-        <td>${{row.acquisition_channel}}</td>
-        <td>${{row.roi.toFixed(2)}}x</td>
-        <td>${{moneyFmt.format(row.cost_per_conversion)}}</td>
-      </tr>`).join("");
-    }}
-
-    function renderForecast() {{
-      const rows = data.forecast
-        .filter(row => state.brand === "All" || row.brand === state.brand)
-        .slice(0, 12);
-      const maxValue = Math.max(...rows.map(row => row[state.forecastMode]), 1);
-      els.forecastBars.innerHTML = rows.map(row => {{
-        const width = Math.max(5, row[state.forecastMode] / maxValue * 100);
-        return `<div class="viz-bar">
-          <strong>${{row.month.slice(0, 7)}}</strong>
-          <div class="track"><div class="fill" style="width:${{width.toFixed(1)}}%"></div></div>
-          <span>${{shortMoneyFmt.format(row[state.forecastMode])}}</span>
+      }).join("");
+    }
+    function renderControls() {
+      els.ownerControls.replaceChildren(...uniq(data.actions.map(row => row.owner)).map(owner =>
+        button(owner, owner === state.owner, () => {
+          state.owner = owner;
+          renderControls();
+          renderActionQueue();
+        })
+      ));
+      els.urgencyControls.replaceChildren(...uniq(data.actions.map(row => row.urgency)).map(urgency =>
+        button(urgency, urgency === state.urgency, () => {
+          state.urgency = urgency;
+          renderControls();
+          renderActionQueue();
+        })
+      ));
+    }
+    function renderActionQueue() {
+      const rows = filteredActions();
+      els.queueCount.textContent = `${rows.length} items`;
+      els.actionRows.innerHTML = rows.slice(0, 12).map(row => `
+        <tr>
+          <td data-label="Customer">${row.customer_id}</td>
+          <td data-label="Issue"><strong>${row.issue_label}</strong><br><span class="muted">${row.reason}</span></td>
+          <td data-label="Owner"><span class="owner-pill">${row.owner}</span></td>
+          <td data-label="Value">${money.format(row.expected_value)}</td>
+          <td data-label="Action">${row.recommended_action}</td>
+        </tr>
+      `).join("") || `<tr><td data-label="Status" colspan="5">No actions match this filter.</td></tr>`;
+      renderIssueMix(rows);
+    }
+    function renderIssueMix(rows) {
+      const mix = {};
+      rows.forEach(row => {
+        row.issue_type.split(" + ").forEach(issue => {
+          const meta = data.issueMeta[issue] || { label: issue };
+          mix[meta.label] = (mix[meta.label] || 0) + 1;
+        });
+      });
+      const max = Math.max(...Object.values(mix), 1);
+      els.issueMix.innerHTML = Object.entries(mix).sort((a, b) => b[1] - a[1]).map(([label, count]) => {
+        const width = Math.max(5, count / max * 100);
+        return `<div class="recovery-row">
+          <strong>${label}</strong>
+          <div class="bar-track"><div class="bar-fill" style="width:${width.toFixed(1)}%"></div></div>
+          <span>${count}</span>
         </div>`;
-      }}).join("");
-      renderControls();
-    }}
-
-    function renderSimulator() {{
-      const targetCount = Number(els.targetCount.value);
-      const incentive = Number(els.incentiveCost.value);
-      const saveRate = Number(els.saveRate.value) / 100;
-      const targets = filteredCustomers().slice(0, targetCount);
-      const exposure = targets.reduce((sum, customer) => sum + customer.monthly_revenue * 6 * customer.churn_risk_score, 0);
-      const saved = exposure * saveRate;
-      const cost = targets.length * incentive;
-      const net = saved - cost;
-      const breakEven = exposure > 0 ? cost / exposure : 0;
-
-      els.targetCountLabel.textContent = numberFmt.format(targetCount);
-      els.incentiveLabel.textContent = moneyFmt.format(incentive);
-      els.saveRateLabel.textContent = pctFmt.format(saveRate);
-      els.savedRevenue.textContent = moneyFmt.format(saved);
-      els.campaignCost.textContent = moneyFmt.format(cost);
-      els.netImpact.textContent = moneyFmt.format(net);
-      els.breakEven.textContent = pctFmt.format(breakEven);
-    }}
-
-    function renderDrivers() {{
-      els.driverRows.innerHTML = data.drivers.map(row => {{
-        const impact = row.coefficient > 0 ? "Raises churn risk" : "Reduces churn risk";
-        return `<div class="driver">
-          <code>${{row.feature}}</code>
-          <span>${{impact}}</span>
-          <strong>${{row.coefficient.toFixed(2)}}</strong>
+      }).join("");
+    }
+    function renderPayments() {
+      const max = Math.max(...data.payments.map(row => row.open_amount), 1);
+      els.paymentRows.innerHTML = data.payments.map(row => {
+        const width = Math.max(5, row.open_amount / max * 100);
+        return `<div class="recovery-row">
+          <strong>${row.decline_reason.replaceAll("_", " ")}</strong>
+          <div class="bar-track"><div class="bar-fill" style="width:${width.toFixed(1)}%"></div></div>
+          <span>${money.format(row.open_amount)}</span>
         </div>`;
-      }}).join("");
-    }}
-
-    function renderSource() {{
-      els.sourceList.innerHTML = data.rawFiles.map(file => `<li>${{file}}</li>`).join("");
-    }}
-
-    const sceneState = initScene();
-    function initFallbackScene() {{
-      const canvas = document.getElementById("riskScene");
-      const context = canvas.getContext("2d");
-      let activeCustomers = data.customers;
-
-      function resize() {{
-        const rect = canvas.getBoundingClientRect();
-        const scale = Math.min(window.devicePixelRatio || 1, 2);
-        canvas.width = Math.floor(rect.width * scale);
-        canvas.height = Math.floor(rect.height * scale);
-        context.setTransform(scale, 0, 0, scale, 0, 0);
-        draw();
-      }}
-
-      function draw() {{
-        const rect = canvas.getBoundingClientRect();
-        context.clearRect(0, 0, rect.width, rect.height);
-        context.fillStyle = "#1a1a1a";
-        context.fillRect(0, 0, rect.width, rect.height);
-        context.strokeStyle = "#3a3a3a";
-        context.lineWidth = 1;
-        for (let i = 0; i < 4; i += 1) {{
-          context.beginPath();
-          context.ellipse(rect.width / 2, rect.height * .52, rect.width * (.28 + i * .07), rect.height * (.055 + i * .018), 0, 0, Math.PI * 2);
-          context.stroke();
-        }}
-        const selectedIds = new Set(activeCustomers.map(customer => customer.customer_id));
-        data.customers.slice(0, 240).forEach((customer, index) => {{
-          const angle = index * 2.399963 + customer.churn_risk_score * 1.7;
-          const radius = rect.width * (.16 + customer.churn_risk_score * .18);
-          const x = rect.width / 2 + Math.cos(angle) * radius;
-          const y = rect.height * .52 + Math.sin(angle) * radius * .18 - customer.churn_risk_score * rect.height * .24;
-          const active = selectedIds.has(customer.customer_id);
-          context.beginPath();
-          context.fillStyle = active ? (customer.risk_segment === "critical" ? "#ef4444" : "#faff69") : "#5a5a5a";
-          context.globalAlpha = active ? .75 : .38;
-          context.arc(x, y, active ? 5 : 3, 0, Math.PI * 2);
-          context.fill();
-        }});
-        context.globalAlpha = 1;
-      }}
-
-      window.addEventListener("resize", resize);
-      resize();
-      return {{
-        fallback: true,
-        update(customers) {{
-          activeCustomers = customers;
-          draw();
-        }}
-      }};
-    }}
-
-    function initScene() {{
-      if (!THREE) {{
-        return initFallbackScene();
-      }}
-      const canvas = document.getElementById("riskScene");
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 100);
-      camera.position.set(0, 1.45, 7.2);
-      camera.lookAt(0, 0, 0);
-      const renderer = new THREE.WebGLRenderer({{ canvas, antialias: true, alpha: true }});
-      renderer.setClearColor(0x1a1a1a, 1);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-      const group = new THREE.Group();
-      group.position.y = .35;
-      scene.add(group);
-      const ambient = new THREE.AmbientLight(0xffffff, 0.72);
-      const point = new THREE.PointLight(0xfaff69, 2.2, 18);
-      point.position.set(3, 5, 6);
-      scene.add(ambient, point);
-
-      const ringMaterial = new THREE.MeshBasicMaterial({{ color: 0x3a3a3a, wireframe: true, transparent: true, opacity: .38 }});
-      for (let i = 0; i < 4; i += 1) {{
-        const ring = new THREE.Mesh(new THREE.TorusGeometry(1.3 + i * .55, .008, 8, 96), ringMaterial);
-        ring.rotation.x = Math.PI / 2;
-        group.add(ring);
-      }}
-      const pointGeometry = new THREE.SphereGeometry(.055, 12, 12);
-      const activeMaterial = new THREE.MeshStandardMaterial({{ color: 0xfaff69, emissive: 0x777700, roughness: .35, metalness: .2 }});
-      const mutedMaterial = new THREE.MeshStandardMaterial({{ color: 0x5a5a5a, emissive: 0x111111, roughness: .65, metalness: .1 }});
-      const highMaterial = new THREE.MeshStandardMaterial({{ color: 0xef4444, emissive: 0x551111, roughness: .42, metalness: .15 }});
-      const meshes = data.customers.slice(0, 240).map((customer, index) => {{
-        const angle = index * 2.399963 + customer.churn_risk_score * 1.7;
-        const radius = 1.05 + customer.churn_risk_score * 2.2;
-        const mesh = new THREE.Mesh(pointGeometry, activeMaterial);
-        mesh.position.set(Math.cos(angle) * radius, (customer.churn_risk_score - .35) * 3.2, Math.sin(angle) * radius);
-        mesh.userData.customer = customer;
-        group.add(mesh);
-        return mesh;
-      }});
-
-      function resize() {{
-        const rect = canvas.getBoundingClientRect();
-        renderer.setSize(rect.width, rect.height, false);
-        camera.aspect = rect.width / rect.height;
-        camera.updateProjectionMatrix();
-      }}
-      window.addEventListener("resize", resize);
-      resize();
-
-      function animate() {{
-        group.rotation.y += 0.0025;
-        group.rotation.x = Math.sin(Date.now() * 0.00035) * 0.08;
-        renderer.render(scene, camera);
-        requestAnimationFrame(animate);
-      }}
-      animate();
-
-      return {{ meshes, activeMaterial, mutedMaterial, highMaterial }};
-    }}
-
-    function updateScene() {{
-      const customers = filteredCustomers();
-      if (sceneState.fallback) {{
-        sceneState.update(customers);
-        els.sceneCustomers.textContent = numberFmt.format(customers.length);
-        els.sceneCritical.textContent = numberFmt.format(customers.filter(customer => customer.risk_segment === "critical").length);
-        els.sceneAvgRisk.textContent = customers.length ? pctFmt.format(customers.reduce((sum, customer) => sum + customer.churn_risk_score, 0) / customers.length) : "0%";
-        return;
-      }}
-      const selectedIds = new Set(customers.map(customer => customer.customer_id));
-      let visible = 0;
-      let critical = 0;
-      let riskSum = 0;
-      sceneState.meshes.forEach(mesh => {{
-        const customer = mesh.userData.customer;
-        const active = selectedIds.has(customer.customer_id);
-        mesh.material = active ? (customer.risk_segment === "critical" ? sceneState.highMaterial : sceneState.activeMaterial) : sceneState.mutedMaterial;
-        mesh.scale.setScalar(active ? 1.45 : .72);
-        if (active) {{
-          visible += 1;
-          riskSum += customer.churn_risk_score;
-          if (customer.risk_segment === "critical") critical += 1;
-        }}
-      }});
-      els.sceneCustomers.textContent = numberFmt.format(customers.length);
-      els.sceneCritical.textContent = numberFmt.format(customers.filter(customer => customer.risk_segment === "critical").length);
-      els.sceneAvgRisk.textContent = customers.length ? pctFmt.format(customers.reduce((sum, customer) => sum + customer.churn_risk_score, 0) / customers.length) : "0%";
-    }}
-
-    function renderAll() {{
-      renderControls();
-      renderBrandRisk();
-      renderDistribution();
-      renderCustomers();
-      renderChannels();
-      renderForecast();
-      renderSimulator();
-      updateScene();
-    }}
-
-    [els.targetCount, els.incentiveCost, els.saveRate].forEach(input => input.addEventListener("input", renderSimulator));
-    renderDrivers();
-    renderSource();
-    renderAll();
+      }).join("");
+    }
+    function renderSkuRisk() {
+      els.skuRows.innerHTML = data.skuRisk.slice(0, 8).map(row => `
+        <tr>
+          <td data-label="SKU">${row.sku}</td>
+          <td data-label="Brand">${row.brand}</td>
+          <td data-label="Shortfall">${number.format(row.stockout_units)} units</td>
+          <td data-label="Risk">${percent.format(row.stockout_risk)}</td>
+          <td data-label="Margin">${money.format(row.margin_at_risk)}</td>
+        </tr>
+      `).join("");
+    }
+    function renderSources() {
+      els.sourceList.innerHTML = data.rawFiles.map(file => `<li>${file}</li>`).join("");
+    }
+    renderBrief();
+    renderKpis();
+    renderLeakage();
+    renderControls();
+    renderActionQueue();
+    renderPayments();
+    renderSkuRisk();
+    renderSources();
   </script>
 </body>
 </html>"""
-
+    html_doc = html_doc.replace("__DASHBOARD_DATA__", json.dumps(payload, ensure_ascii=False))
     (REPORTS_DIR / "dashboard.html").write_text(html_doc, encoding="utf-8")
     print("Dashboard written to reports/dashboard.html.")
 
