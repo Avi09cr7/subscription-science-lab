@@ -10,6 +10,7 @@ from leakage import build_leakage_outputs
 from model import classification_metrics, predict_proba, train_logistic_regression
 from monitoring import build_monitoring_outputs
 from playbooks import build_playbook_outputs
+from scenarios import build_scenario_outputs
 from segments import build_segment_outputs
 
 
@@ -198,6 +199,10 @@ def main() -> None:
         sku_inventory,
         REPORTS_DIR,
     )
+    scenario_plan, scenario_workload, scenario_actions, scenario_summary = build_scenario_outputs(
+        action_queue,
+        REPORTS_DIR,
+    )
 
     scored_customers.to_csv(PROCESSED_DIR / "customers_scored.csv", index=False)
     scored_customers.sort_values("churn_risk_score", ascending=False).head(100).to_csv(
@@ -215,6 +220,9 @@ def main() -> None:
     monitoring_alerts.to_csv(REPORTS_DIR / "monitoring_alerts.csv", index=False)
     metric_changes.to_csv(REPORTS_DIR / "weekly_metric_changes.csv", index=False)
     data_quality_scorecard.to_csv(REPORTS_DIR / "data_quality_scorecard.csv", index=False)
+    scenario_plan.to_csv(REPORTS_DIR / "scenario_plan.csv", index=False)
+    scenario_workload.to_csv(REPORTS_DIR / "scenario_workload.csv", index=False)
+    scenario_actions.to_csv(REPORTS_DIR / "scenario_action_plan.csv", index=False)
 
     metrics_payload = {
         "validation_checks": validation_checks,
@@ -236,6 +244,8 @@ def main() -> None:
         ),
         "open_monitoring_alerts": monitoring_summary["open_alerts"],
         "critical_monitoring_alerts": monitoring_summary["critical_alerts"],
+        "scenario_max_net_impact": scenario_summary["max_net_impact"],
+        "scenario_max_actions": scenario_summary["max_actions"],
     }
     (REPORTS_DIR / "model_metrics.json").write_text(json.dumps(metrics_payload, indent=2), encoding="utf-8")
     print("Pipeline complete. Reports written to reports/.")

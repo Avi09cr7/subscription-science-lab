@@ -1,0 +1,17 @@
+{
+  "scenario_count": 3,
+  "best_scenario": {
+    "scenario": "Full recovery push",
+    "description": "Maximum available queue coverage using all currently ranked opportunities.",
+    "selected_actions": 75,
+    "covered_expected_value": 17354.14,
+    "expected_saved_value": 4358.73,
+    "execution_cost": 697.75,
+    "net_impact": 3660.98,
+    "roi": 6.25,
+    "top_owner": "Operations",
+    "recommendation": "Use when leadership wants maximum recovery coverage this week."
+  },
+  "max_net_impact": 3660.98,
+  "max_actions": 75
+}

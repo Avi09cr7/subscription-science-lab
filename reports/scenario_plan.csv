@@ -1,0 +1,4 @@
+scenario,description,selected_actions,covered_expected_value,expected_saved_value,execution_cost,net_impact,roi,top_owner,recommendation
+Full recovery push,Maximum available queue coverage using all currently ranked opportunities.,75,17354.14,4358.73,697.75,3660.98,6.25,Operations,Use when leadership wants maximum recovery coverage this week.
+Balanced week,Practical cross-functional plan with enough capacity to cover most high-value work.,45,12207.79,3217.9,355.5,2862.4,9.05,Billing Ops,Recommended default plan: meaningful coverage without overloading a single team.
+Lean sprint,Highest-return work for a constrained ops week.,22,7156.99,1883.59,160.0,1723.59,11.77,Operations,Use when team capacity is constrained and quick wins matter most.

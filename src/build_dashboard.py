@@ -40,6 +40,10 @@ def main() -> None:
     playbooks = pd.read_csv(REPORTS_DIR / "recovery_playbook_roi.csv")
     experiments = pd.read_csv(REPORTS_DIR / "experiment_backlog.csv")
     owner_workload = pd.read_csv(REPORTS_DIR / "owner_workload.csv")
+    scenario_plan = pd.read_csv(REPORTS_DIR / "scenario_plan.csv")
+    scenario_workload = pd.read_csv(REPORTS_DIR / "scenario_workload.csv")
+    scenario_actions = pd.read_csv(REPORTS_DIR / "scenario_action_plan.csv")
+    scenario_summary = json.loads((REPORTS_DIR / "scenario_summary.json").read_text(encoding="utf-8"))
     segments = pd.read_csv(REPORTS_DIR / "segment_opportunity_report.csv")
     segment_issues = pd.read_csv(REPORTS_DIR / "segment_issue_matrix.csv")
     monitoring_alerts = pd.read_csv(REPORTS_DIR / "monitoring_alerts.csv")
@@ -58,6 +62,10 @@ def main() -> None:
         "playbooks": playbooks.to_dict(orient="records"),
         "experiments": experiments.to_dict(orient="records"),
         "ownerWorkload": owner_workload.to_dict(orient="records"),
+        "scenarios": scenario_plan.to_dict(orient="records"),
+        "scenarioWorkload": scenario_workload.to_dict(orient="records"),
+        "scenarioActions": scenario_actions.to_dict(orient="records"),
+        "scenarioSummary": scenario_summary,
         "segments": segments.to_dict(orient="records"),
         "segmentIssues": segment_issues.to_dict(orient="records"),
         "monitoringAlerts": monitoring_alerts.to_dict(orient="records"),
@@ -139,7 +147,7 @@ def main() -> None:
     .mark span { background: var(--primary); border-radius: 2px; }
     .nav-links {
       display: flex;
-      gap: 20px;
+      gap: 16px;
       align-items: center;
       color: var(--muted);
     }
@@ -422,6 +430,7 @@ def main() -> None:
     }
     td:first-child, th:first-child { white-space: nowrap; }
     tbody tr:hover td { background: var(--surface-soft); }
+    tbody tr.is-selected td { background: rgba(250, 255, 105, .08); }
     .owner-pill {
       display: inline-flex;
       border-radius: 9999px;
@@ -694,6 +703,7 @@ def main() -> None:
         <a href="#leakage">Leakage</a>
         <a href="#queue">Action Queue</a>
         <a href="#playbooks">Playbooks</a>
+        <a href="#scenarios">Scenarios</a>
         <a href="#segments">Segments</a>
         <a href="#monitoring">Monitor</a>
         <a href="#payments">Payments</a>
@@ -817,6 +827,52 @@ def main() -> None:
         </table>
       </section>
     </div>
+
+      <section id="scenarios">
+        <div class="section-head">
+          <div>
+            <h2>Capacity Scenario Planner</h2>
+            <p>Compares lean, balanced, and full recovery weeks using owner capacity, expected saved value, execution cost, ROI, and net impact.</p>
+          </div>
+          <span class="badge">Step 6</span>
+        </div>
+        <div class="controls" id="scenarioControls"></div>
+        <div class="metric-strip" id="scenarioSummary"></div>
+        <table>
+          <thead><tr><th>Scenario</th><th>Actions</th><th>Covered Value</th><th>Saved Value</th><th>Cost</th><th>Net Impact</th><th>When To Use</th></tr></thead>
+          <tbody id="scenarioRows"></tbody>
+        </table>
+      </section>
+
+      <div class="grid">
+        <section>
+          <div class="section-head">
+            <div>
+              <h2>Scenario Owner Load</h2>
+              <p>Shows how the selected plan distributes work across teams and playbooks.</p>
+            </div>
+            <span class="badge">Capacity</span>
+          </div>
+          <table>
+            <thead><tr><th>Owner</th><th>Playbook</th><th>Actions</th><th>Saved Value</th><th>Net Impact</th></tr></thead>
+            <tbody id="scenarioWorkloadRows"></tbody>
+          </table>
+        </section>
+
+        <section>
+          <div class="section-head">
+            <div>
+              <h2>Selected Action Sample</h2>
+              <p>A concrete view of the customers the selected scenario would route first.</p>
+            </div>
+            <span class="badge">Next Moves</span>
+          </div>
+          <table>
+            <thead><tr><th>Customer</th><th>Owner</th><th>Playbook</th><th>Net</th><th>Action</th></tr></thead>
+            <tbody id="scenarioActionRows"></tbody>
+          </table>
+        </section>
+      </div>
 
       <section id="segments">
         <div class="section-head">
@@ -952,7 +1008,7 @@ def main() -> None:
     const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
     const number = new Intl.NumberFormat("en-US");
     const percent = new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 0 });
-    const state = { owner: "All", urgency: "All" };
+    const state = { owner: "All", urgency: "All", scenario: "Balanced week" };
 
     const els = {
       totalAtRisk: document.getElementById("totalAtRisk"),
@@ -975,6 +1031,11 @@ def main() -> None:
       playbookRows: document.getElementById("playbookRows"),
       experimentRows: document.getElementById("experimentRows"),
       ownerRows: document.getElementById("ownerRows"),
+      scenarioControls: document.getElementById("scenarioControls"),
+      scenarioSummary: document.getElementById("scenarioSummary"),
+      scenarioRows: document.getElementById("scenarioRows"),
+      scenarioWorkloadRows: document.getElementById("scenarioWorkloadRows"),
+      scenarioActionRows: document.getElementById("scenarioActionRows"),
       segmentSummary: document.getElementById("segmentSummary"),
       segmentRows: document.getElementById("segmentRows"),
       segmentIssueRows: document.getElementById("segmentIssueRows"),
@@ -1141,6 +1202,69 @@ def main() -> None:
         </tr>
       `).join("");
     }
+    function selectedScenario() {
+      return data.scenarios.find(row => row.scenario === state.scenario) || data.scenarios[0] || {};
+    }
+    function orderedScenarios() {
+      const order = { "Lean sprint": 1, "Balanced week": 2, "Full recovery push": 3 };
+      return [...data.scenarios].sort((a, b) => (order[a.scenario] || 99) - (order[b.scenario] || 99));
+    }
+    function renderScenarioControls() {
+      els.scenarioControls.replaceChildren(...orderedScenarios().map(row =>
+        button(row.scenario, row.scenario === state.scenario, () => {
+          state.scenario = row.scenario;
+          renderScenarioControls();
+          renderScenarios();
+        })
+      ));
+    }
+    function renderScenarios() {
+      const plan = selectedScenario();
+      els.scenarioSummary.innerHTML = [
+        ["Selected plan", plan.scenario || "None"],
+        ["Actions staffed", number.format(plan.selected_actions || 0)],
+        ["Net impact", money.format(plan.net_impact || 0)],
+        ["ROI after cost", `${Number(plan.roi || 0).toFixed(1)}x`]
+      ].map(([label, value]) => `
+        <div class="metric-tile"><span>${label}</span><strong>${value}</strong></div>
+      `).join("");
+
+      els.scenarioRows.innerHTML = orderedScenarios().map(row => `
+        <tr class="${row.scenario === state.scenario ? "is-selected" : ""}">
+          <td data-label="Scenario"><strong>${row.scenario}</strong><br><span class="muted">${row.description}</span></td>
+          <td data-label="Actions">${number.format(row.selected_actions)}</td>
+          <td data-label="Covered">${money.format(row.covered_expected_value)}</td>
+          <td data-label="Saved">${money.format(row.expected_saved_value)}</td>
+          <td data-label="Cost">${money.format(row.execution_cost)}</td>
+          <td data-label="Net">${money.format(row.net_impact)}<br><span class="muted">${Number(row.roi).toFixed(1)}x ROI</span></td>
+          <td data-label="Use">${row.recommendation}</td>
+        </tr>
+      `).join("");
+
+      const workloadRows = data.scenarioWorkload.filter(row => row.scenario === plan.scenario);
+      els.scenarioWorkloadRows.innerHTML = workloadRows.map(row => `
+        <tr>
+          <td data-label="Owner"><span class="owner-pill">${row.owner}</span></td>
+          <td data-label="Playbook">${row.playbook}</td>
+          <td data-label="Actions">${number.format(row.selected_actions)}</td>
+          <td data-label="Saved">${money.format(row.expected_saved_value)}</td>
+          <td data-label="Net">${money.format(row.net_impact)}</td>
+        </tr>
+      `).join("") || `<tr><td data-label="Status" colspan="5">No positive-return actions selected.</td></tr>`;
+
+      const actionRows = data.scenarioActions
+        .filter(row => row.scenario === plan.scenario)
+        .slice(0, 8);
+      els.scenarioActionRows.innerHTML = actionRows.map(row => `
+        <tr>
+          <td data-label="Customer">${row.customer_id}<br><span class="muted">${issueLabel(row.primary_issue)}</span></td>
+          <td data-label="Owner"><span class="owner-pill">${row.owner}</span></td>
+          <td data-label="Playbook">${row.playbook}</td>
+          <td data-label="Net">${money.format(row.net_impact)}</td>
+          <td data-label="Action">${row.recommended_action}</td>
+        </tr>
+      `).join("") || `<tr><td data-label="Status" colspan="5">No selected actions for this scenario.</td></tr>`;
+    }
     function issueLabel(issue) {
       return data.issueMeta[issue]?.label || issue.replaceAll("_", " ");
     }
@@ -1278,6 +1402,8 @@ def main() -> None:
     renderPlaybooks();
     renderExperiments();
     renderOwnerWorkload();
+    renderScenarioControls();
+    renderScenarios();
     renderSegments();
     renderMonitoring();
     renderMetricChanges();
